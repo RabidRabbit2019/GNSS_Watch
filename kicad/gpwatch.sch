@@ -112,17 +112,17 @@ Text Label 4250 2850 0    60   ~ 0
 CS
 Text Label 7000 3650 0    60   ~ 0
 CS
-Text Label 4250 2650 0    60   ~ 0
+Text Label 6400 2550 2    60   ~ 0
 MTX
-Text Label 4250 2750 0    60   ~ 0
+Text Label 6400 2450 2    60   ~ 0
 MRX
 Text Label 4300 4750 0    60   ~ 0
 MRX
 Text Label 4300 4850 0    60   ~ 0
 MTX
-Text Label 6400 2450 2    60   ~ 0
+Text Label 6400 2250 2    60   ~ 0
 SDA
-Text Label 6400 2550 2    60   ~ 0
+Text Label 6400 2350 2    60   ~ 0
 SCL
 Text Label 3700 2250 2    60   ~ 0
 SCL
@@ -245,17 +245,11 @@ Wire Wire Line
 Wire Wire Line
 	4250 2850 4800 2850
 Wire Wire Line
-	4250 2650 4800 2650
-Wire Wire Line
-	4250 2750 4800 2750
-Wire Wire Line
 	4300 4750 4800 4750
 Wire Wire Line
 	4300 4850 4800 4850
 Wire Wire Line
-	6400 2450 5900 2450
-Wire Wire Line
-	6400 2550 5900 2550
+	6400 2250 5900 2250
 Wire Wire Line
 	3700 2250 3150 2250
 Wire Wire Line
@@ -390,4 +384,26 @@ Text Label 6400 3250 2    60   ~ 0
 BT2
 Text Label 6400 3350 2    60   ~ 0
 BT3
+Wire Wire Line
+	6400 2350 5900 2350
+Wire Wire Line
+	6400 2450 5900 2450
+Wire Wire Line
+	6400 2550 5900 2550
+Wire Wire Line
+	7000 3850 7550 3850
+Text Label 7000 3850 0    60   ~ 0
+LCD_DC
+Wire Wire Line
+	4250 2750 4800 2750
+Text Label 4250 2750 0    60   ~ 0
+LCD_DC
+Wire Wire Line
+	7000 3450 7550 3450
+Text Label 7000 3450 0    60   ~ 0
+LCD_RST
+Wire Wire Line
+	4250 2450 4800 2450
+Text Label 4250 2450 0    60   ~ 0
+LCD_RST
 $EndSCHEMATC
