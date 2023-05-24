@@ -1,3 +1,5 @@
+#include "display.h"
+
 #include "n200_func.h"
 #include "gd32vf103.h"
 
@@ -9,13 +11,13 @@ void main() {
   // enable clocks for PIOA, PIOB and PIOC
   RCU_APB2EN |= (RCU_APB2EN_PCEN | RCU_APB2EN_PBEN | RCU_APB2EN_PAEN);
   // PC13 Push-Pull 2MHz output
-  GPIO_CTL1(GPIOC) = (GPIO_CTL1(GPIOC) & ~GPIO_MODE_MASK(13-8))
-                   | GPIO_MODE_SET(13 - 8, 0x0F & (GPIO_MODE_OUT_PP | GPIO_OSPEED_2MHZ))
+  GPIO_CTL1(GPIOC) = (GPIO_CTL1(GPIOC) & ~GPIO_MODE_MASK1(13))
+                   | GPIO_MODE_SET1(13, 0x0F & (GPIO_MODE_OUT_PP | GPIO_OSPEED_2MHZ))
                    ;
   // PA1, PA2 Push-Pull 2MHz output
-  GPIO_CTL0(GPIOA) = (GPIO_CTL0(GPIOA) & ~(GPIO_MODE_MASK(1) | GPIO_MODE_MASK(2)))
-                   | GPIO_MODE_SET(1, 0x0F & (GPIO_MODE_OUT_PP | GPIO_OSPEED_2MHZ))
-                   | GPIO_MODE_SET(2, 0x0F & (GPIO_MODE_OUT_PP | GPIO_OSPEED_2MHZ))
+  GPIO_CTL0(GPIOA) = (GPIO_CTL0(GPIOA) & ~(GPIO_MODE_MASK0(1) | GPIO_MODE_MASK0(2)))
+                   | GPIO_MODE_SET0(1, 0x0F & (GPIO_MODE_OUT_PP | GPIO_OSPEED_2MHZ))
+                   | GPIO_MODE_SET0(2, 0x0F & (GPIO_MODE_OUT_PP | GPIO_OSPEED_2MHZ))
                    ;
   // RGB LED off
   // set 1 for PC13 (R led OFF)
@@ -23,22 +25,44 @@ void main() {
   // set 1 for PA1, PA2 (G and B leds OFF)
   GPIO_BOP(GPIOA) |= (GPIO_BOP_BOP1 | GPIO_BOP_BOP2);
   
-  // remap I2C0 (PB9, PB8) and USART0 (PB7, PB6)
+  // remap I2C0 (PB9 - SDA, PB8 - SCL) and USART0 (PB7 - RX, PB6 - TX)
   AFIO_PCF0 |= (AFIO_PCF0_I2C0_REMAP | AFIO_PCF0_USART0_REMAP);
-  // configure I2C pins
+  // configure I2C pins and inputs for buttons
   // PB8 and PB9 - output open-drain 2MHz alternate fn
-  GPIO_CTL1(GPIOB) = (GPIO_CTL1(GPIOB) & ~(GPIO_MODE_MASK(9-8) | GPIO_MODE_MASK(8-8)))
-                   | GPIO_MODE_SET(9-8, 0x0F & (GPIO_MODE_AF_OD | GPIO_OSPEED_2MHZ))
-                   | GPIO_MODE_SET(8-8, 0x0F & (GPIO_MODE_AF_OD | GPIO_OSPEED_2MHZ))
+  // PB13..PB15 - input with pullups
+  GPIO_CTL1(GPIOB) = (GPIO_CTL1(GPIOB) & ~(GPIO_MODE_MASK1(9) | GPIO_MODE_MASK1(8) | GPIO_MODE_MASK1(13) | GPIO_MODE_MASK1(14) | GPIO_MODE_MASK1(15)))
+                   | GPIO_MODE_SET1(9, 0x0F & (GPIO_MODE_AF_OD | GPIO_OSPEED_2MHZ))
+                   | GPIO_MODE_SET1(8, 0x0F & (GPIO_MODE_AF_OD | GPIO_OSPEED_2MHZ))
+                   | GPIO_MODE_SET1(15, 0x0F & GPIO_MODE_IPU)
+                   | GPIO_MODE_SET1(14, 0x0F & GPIO_MODE_IPU)
+                   | GPIO_MODE_SET1(13, 0x0F & GPIO_MODE_IPU)
                    ;
   // configure USART pins
-  // PB7 input, PB6 output push-pull 2MHz alternate fn
-  GPIO_CTL0(GPIOB) = (GPIO_CTL0(GPIOB) & ~(GPIO_MODE_MASK(7) | GPIO_MODE_MASK(6)))
-                   | GPIO_MODE_SET(7, 0x0F & GPIO_MODE_IN_FLOATING)
-                   | GPIO_MODE_SET(6, 0x0F & (GPIO_MODE_AF_PP | GPIO_OSPEED_2MHZ))
+  // PB7 input with pullup, PB6 output push-pull 2MHz alternate fn
+  GPIO_CTL0(GPIOB) = (GPIO_CTL0(GPIOB) & ~(GPIO_MODE_MASK0(7) | GPIO_MODE_MASK0(6)))
+                   | GPIO_MODE_SET0(7, 0x0F & GPIO_MODE_IPU)
+                   | GPIO_MODE_SET0(6, 0x0F & (GPIO_MODE_AF_PP | GPIO_OSPEED_2MHZ))
                    ;
-  // configure SPI pins
-                   
+  // set pullups
+  GPIO_BOP(GPIOB) = GPIO_BOP_BOP7 | GPIO_BOP_BOP13 | GPIO_BOP_BOP14 | GPIO_BOP_BOP15;
+  // configure LCD pins (PA0 - RST, PA3 - DC, PA4 - CS, PA5 - SCK, PA6 - MISO, PA7 - MOSI, PA8 - backlight on/off)
+  // PA6 - input with pullup, PA5, PA7 - output push-pull 50 MHz alternate fn
+  // PA0, PA3, PA4, PA8 - output push-pull 2MHz
+  GPIO_CTL0(GPIOA) = (GPIO_CTL0(GPIOA) & ~(GPIO_MODE_MASK0(0) | GPIO_MODE_MASK0(3) | GPIO_MODE_MASK0(4) | GPIO_MODE_MASK0(5) | GPIO_MODE_MASK0(6)  | GPIO_MODE_MASK0(7)))
+                   | GPIO_MODE_SET0(0, 0x0F & (GPIO_MODE_OUT_PP | GPIO_OSPEED_2MHZ))
+                   | GPIO_MODE_SET0(3, 0x0F & (GPIO_MODE_OUT_PP | GPIO_OSPEED_2MHZ))
+                   | GPIO_MODE_SET0(4, 0x0F & (GPIO_MODE_OUT_PP | GPIO_OSPEED_2MHZ))
+                   | GPIO_MODE_SET0(5, 0x0F & (GPIO_MODE_AF_PP | GPIO_OSPEED_50MHZ))
+                   | GPIO_MODE_SET0(6, 0x0F & GPIO_MODE_IPU)
+                   | GPIO_MODE_SET0(7, 0x0F & (GPIO_MODE_AF_PP | GPIO_OSPEED_50MHZ))
+                   ;
+  GPIO_CTL1(GPIOA) = (GPIO_CTL1(GPIOA) & ~(GPIO_MODE_MASK1(8)))
+                   | GPIO_MODE_SET1(8, 0x0F & (GPIO_MODE_OUT_PP | GPIO_OSPEED_2MHZ))
+                   ;
+  // set pullups
+  GPIO_BOP(GPIOA) = GPIO_BOP_BOP6;
+  // init display
+  display_init();
   
   
   // loop

@@ -2454,8 +2454,10 @@ typedef enum
 typedef FlagStatus bit_status;
 
 /* GPIO mode values set */
-#define GPIO_MODE_SET(n, mode)           ((uint32_t)((uint32_t)(mode) << (4U * (n))))
-#define GPIO_MODE_MASK(n)                (0xFU << (4U * (n)))
+#define GPIO_MODE_SET0(n, mode)           ((uint32_t)((uint32_t)(mode) << (4U * (n))))
+#define GPIO_MODE_SET1(n, mode)           ((uint32_t)((uint32_t)(mode) << (4U * (n-8))))
+#define GPIO_MODE_MASK0(n)                (0xFU << (4U * (n)))
+#define GPIO_MODE_MASK1(n)                (0xFU << (4U * (n-8)))
 
 /* GPIO mode definitions */
 #define GPIO_MODE_AIN                    ((uint8_t)0x00U)          /*!< analog input mode */

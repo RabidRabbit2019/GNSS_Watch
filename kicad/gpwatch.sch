@@ -406,4 +406,12 @@ Wire Wire Line
 	4250 2450 4800 2450
 Text Label 4250 2450 0    60   ~ 0
 LCD_RST
+Wire Wire Line
+	7000 4250 7550 4250
+Text Label 7000 4250 0    60   ~ 0
+BL_ON_OFF
+Text Label 6400 3050 2    60   ~ 0
+BL_ON_OFF
+Wire Wire Line
+	6400 3050 5900 3050
 $EndSCHEMATC
