@@ -45,24 +45,10 @@ void main() {
                    ;
   // set pullups
   GPIO_BOP(GPIOB) = GPIO_BOP_BOP7 | GPIO_BOP_BOP13 | GPIO_BOP_BOP14 | GPIO_BOP_BOP15;
-  // configure LCD pins (PA0 - RST, PA3 - DC, PA4 - CS, PA5 - SCK, PA6 - MISO, PA7 - MOSI, PA8 - backlight on/off)
-  // PA6 - input with pullup, PA5, PA7 - output push-pull 50 MHz alternate fn
-  // PA0, PA3, PA4, PA8 - output push-pull 2MHz
-  GPIO_CTL0(GPIOA) = (GPIO_CTL0(GPIOA) & ~(GPIO_MODE_MASK0(0) | GPIO_MODE_MASK0(3) | GPIO_MODE_MASK0(4) | GPIO_MODE_MASK0(5) | GPIO_MODE_MASK0(6)  | GPIO_MODE_MASK0(7)))
-                   | GPIO_MODE_SET0(0, 0x0F & (GPIO_MODE_OUT_PP | GPIO_OSPEED_2MHZ))
-                   | GPIO_MODE_SET0(3, 0x0F & (GPIO_MODE_OUT_PP | GPIO_OSPEED_2MHZ))
-                   | GPIO_MODE_SET0(4, 0x0F & (GPIO_MODE_OUT_PP | GPIO_OSPEED_2MHZ))
-                   | GPIO_MODE_SET0(5, 0x0F & (GPIO_MODE_AF_PP | GPIO_OSPEED_50MHZ))
-                   | GPIO_MODE_SET0(6, 0x0F & GPIO_MODE_IPU)
-                   | GPIO_MODE_SET0(7, 0x0F & (GPIO_MODE_AF_PP | GPIO_OSPEED_50MHZ))
-                   ;
-  GPIO_CTL1(GPIOA) = (GPIO_CTL1(GPIOA) & ~(GPIO_MODE_MASK1(8)))
-                   | GPIO_MODE_SET1(8, 0x0F & (GPIO_MODE_OUT_PP | GPIO_OSPEED_2MHZ))
-                   ;
-  // set pullups
-  GPIO_BOP(GPIOA) = GPIO_BOP_BOP6;
   // init display
   display_init();
+  // test display
+  display_fill_rectangle( 0, 0, 128, 128, DISPLAY_COLOR_BLUE );
   
   
   // loop
