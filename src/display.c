@@ -61,7 +61,7 @@ const uint8_t g_ili9341_init[] = {
 , 0x01, 0x3A, 0x55 // ILI9341_PIXEL_FORMAT
 , 0x02, 0xB1, 0x00, 0x18 // ILI9341_FRC
 , 0x03, 0xB6, 0x08, 0x82, 0x27 // ILI9341_DFC
-, 0x01, 0xF2, 0x00 // ILI9341_3GAMMA_EN
+, 0x01, 0xF2, 0x02 // ILI9341_3GAMMA_EN
 , 0x01, 0x26, 0x01 // ILI9341_GAMMA
 , 0x0F, 0xE0, 0x0F, 0x31, 0x2B, 0x0C, 0x0E, 0x08, 0x4E, 0xF1, 0x37, 0x07, 0x10, 0x03, 0x0E, 0x09, 0x00 // ILI9341_PGAMMA
 , 0x0F, 0xE1, 0x00, 0x0E, 0x14, 0x03, 0x11, 0x07, 0x31, 0xC1, 0x48, 0x08, 0x0F, 0x0C, 0x31, 0x36, 0x0F // ILI9341_NGAMMA
@@ -125,7 +125,7 @@ static void display_spi_write_start( const uint8_t * a_src, uint32_t a_size ) {
 static void display_spi_write_end() {
   uint32_t v_from = g_milliseconds;
   // wait for receive complete (all data transferred) or error at any channel
-  while ( ((uint32_t)(g_milliseconds - v_from)) < 50u ) {
+  while ( ((uint32_t)(g_milliseconds - v_from)) < 250u ) {
     if ( 0 != (DMA_INTF(DMA0) & (DMA_FLAG_ADD(DMA_FLAG_ERR, 1) | DMA_FLAG_ADD(DMA_FLAG_ERR, 2) | DMA_FLAG_ADD(DMA_FLAG_FTF, 1))) ) {
       break;
     }
@@ -145,7 +145,7 @@ static void display_spi_write( const uint8_t * a_src, uint32_t a_size ) {
 
 static void display_bit_delay() {
   volatile int i;
-  for ( i = 0; i < 4; ++i ) {}
+  for ( i = 0; i < 10; ++i ) {}
 }
 
 
@@ -201,11 +201,7 @@ static void display_write_data( const uint8_t * a_buff, uint32_t a_buff_size ) {
 
 
 static void display_reset() {
-  delay_ms(200);
-  display_select();
   display_write_cmd( ILI9341_RESET );
-  display_deselect();
-  delay_ms(200);
 }
 
 
@@ -229,6 +225,8 @@ static void display_set_addr_window( uint16_t x, uint16_t y, uint16_t w, uint16_
   // write
   display_write_cmd( ILI9341_PAGE_ADDR );
   display_write_data( v_cmd_data, sizeof(v_cmd_data) );
+  //
+  display_write_cmd( ILI9341_GRAM );
 }
 
 
@@ -307,15 +305,15 @@ void display_init_dma() {
     // read cmd byte, advance ptr
     uint8_t v_cmd = *v_ptr++;
     // write cmd
-    display_write_cmd( v_cmd );
+    display_write_cmd_dma( v_cmd );
     // write cmd dta
-    display_write_data( v_ptr, v_cnt );
+    display_write_data_dma( v_ptr, v_cnt );
     // advance ptr
     v_ptr += v_cnt;
   }
-  display_write_cmd( ILI9341_SLEEP_OUT );
+  display_write_cmd_dma( ILI9341_SLEEP_OUT );
   delay_ms(6);
-  display_write_cmd( ILI9341_DISPLAY_ON );
+  display_write_cmd_dma( ILI9341_DISPLAY_ON );
   display_deselect();
 }
 
@@ -336,13 +334,13 @@ void display_init() {
   GPIO_CTL1(GPIOA) = (GPIO_CTL1(GPIOA) & ~(GPIO_MODE_MASK1(8)))
                    | GPIO_MODE_SET1(8, 0x0F & (GPIO_MODE_OUT_PP | GPIO_OSPEED_10MHZ))
                    ;
-  // set pullups and enable display backlight, display reset passive, deselect display, SCL low
-  GPIO_BOP(GPIOA) = GPIO_BOP_BOP6 | GPIO_BOP_BOP8 | GPIO_BOP_BOP0 | GPIO_BOP_BOP4 | GPIO_BOP_CR4;
+  // set pullups and enable display backlight, display reset passive, deselect display, SCK low
+  GPIO_BOP(GPIOA) = GPIO_BOP_BOP6 | GPIO_BOP_BOP8 | GPIO_BOP_BOP0 | GPIO_BOP_BOP4 | GPIO_BOP_CR5;
   // reset sequence
-  delay_ms(2000);
-  display_reset();
-  delay_ms(2000);
   display_select();
+  display_reset();
+  delay_ms(150);
+  //
   // issue init commands set
   for ( const uint8_t * v_ptr = g_ili9341_init; 0 != *v_ptr; ) {
     // read data byte count, advance ptr
@@ -359,5 +357,6 @@ void display_init() {
   display_write_cmd( ILI9341_SLEEP_OUT );
   delay_ms(6);
   display_write_cmd( ILI9341_DISPLAY_ON );
+  //
   display_deselect();
 }
