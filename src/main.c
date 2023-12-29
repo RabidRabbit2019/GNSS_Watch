@@ -46,9 +46,11 @@ void main() {
   // set pullups
   GPIO_BOP(GPIOB) = GPIO_BOP_BOP7 | GPIO_BOP_BOP13 | GPIO_BOP_BOP14 | GPIO_BOP_BOP15;
   // init display
-  display_init();
+  display_init_dma();
   // test display
-  display_fill_rectangle( 0, 0, 128, 128, DISPLAY_COLOR_BLUE );
+  display_fill_rectangle_dma( 0, 0, 320, 240, DISPLAY_COLOR_BLUE );
+  display_fill_rectangle_dma( 40, 40, 240, 160, DISPLAY_COLOR_RED );
+  display_fill_rectangle_dma( 80, 80, 160, 80, DISPLAY_COLOR_GREEN );
   
   
   // loop

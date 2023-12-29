@@ -6,12 +6,14 @@
 
 #define ILI9341_RESET           0x01
 #define ILI9341_SLEEP_OUT       0x11
+#define ILI9341_INVOFF          0x20
 #define ILI9341_GAMMA				    0x26
 #define ILI9341_DISPLAY_OFF     0x28
 #define ILI9341_DISPLAY_ON      0x29
 #define ILI9341_COLUMN_ADDR     0x2A
 #define ILI9341_PAGE_ADDR       0x2B
 #define ILI9341_GRAM            0x2C
+#define ILI9341_PTLAR           0x30
 #define ILI9341_MAC             0x36
 #define ILI9341_PIXEL_FORMAT    0x3A
 #define ILI9341_WDB             0x51
@@ -31,6 +33,7 @@
 #define ILI9341_DTCA            0xE8
 #define ILI9341_DTCB            0xEA
 #define ILI9341_POWER_SEQ       0xED
+#define ILI9341_EF              0xEF
 #define ILI9341_3GAMMA_EN       0xF2
 #define ILI9341_INTERFACE       0xF6
 #define ILI9341_PRC             0xF7
@@ -47,22 +50,23 @@
 
 
 const uint8_t g_ili9341_init[] = {
-  0x05, 0xCB, 0x39, 0x2C, 0x00, 0x34, 0x02 // ILI9341_POWERA
-, 0x03, 0xCF, 0x00, 0xC1, 0x30 // ILI9341_POWERB
-, 0x03, 0xE8, 0x85, 0x00, 0x78 // ILI9341_DTCA
-, 0x02, 0xEA, 0x00, 0x00 // ILI9341_DTCB
-, 0x04, 0xED, 0x64, 0x03, 0x12, 0x81 // ILI9341_POWER_SEQ
-, 0x01, 0xF7, 0x20 // ILI9341_PRC
-, 0x01, 0xC0, 0x23 // ILI9341_POWER1
-, 0x01, 0xC1, 0x10 // ILI9341_POWER2
-, 0x02, 0xC5, 0x3E, 0x28 // ILI9341_VCOM1
-, 0x01, 0xC7, 0x86 // ILI9341_VCOM2
-, 0x01, 0x36, ILI9341_MAC_MV | ILI9341_MAC_BGR // ILI9341_MAC
-, 0x01, 0x3A, 0x55 // ILI9341_PIXEL_FORMAT
-, 0x02, 0xB1, 0x00, 0x18 // ILI9341_FRC
-, 0x03, 0xB6, 0x08, 0x82, 0x27 // ILI9341_DFC
-, 0x01, 0xF2, 0x02 // ILI9341_3GAMMA_EN
-, 0x01, 0x26, 0x01 // ILI9341_GAMMA
+  0x05, ILI9341_POWERA, 0x39, 0x2C, 0x00, 0x34, 0x02
+, 0x03, ILI9341_POWERB, 0x00, 0xC1, 0x30
+, 0x03, ILI9341_EF, 0x03, 0x80, 0x02 // ???
+, 0x03, ILI9341_DTCA, 0x85, 0x00, 0x78
+, 0x02, ILI9341_DTCB, 0x00, 0x00
+, 0x04, ILI9341_POWER_SEQ, 0x64, 0x03, 0x12, 0x81
+, 0x01, ILI9341_PRC, 0x20
+, 0x01, ILI9341_POWER1, 0x23
+, 0x01, ILI9341_POWER2, 0x10
+, 0x02, ILI9341_VCOM1, 0x3E, 0x28
+, 0x01, ILI9341_VCOM2, 0x86
+, 0x01, ILI9341_MAC, ILI9341_MAC_MV | ILI9341_MAC_BGR
+, 0x01, ILI9341_PIXEL_FORMAT, 0x55
+, 0x02, ILI9341_FRC, 0x00, 0x1B
+, 0x04, ILI9341_DFC, 0x08, 0x82, 0x27, 0x00
+, 0x01, ILI9341_3GAMMA_EN, 0x02
+, 0x01, ILI9341_GAMMA, 0x01
 , 0x0F, 0xE0, 0x0F, 0x31, 0x2B, 0x0C, 0x0E, 0x08, 0x4E, 0xF1, 0x37, 0x07, 0x10, 0x03, 0x0E, 0x09, 0x00 // ILI9341_PGAMMA
 , 0x0F, 0xE1, 0x00, 0x0E, 0x14, 0x03, 0x11, 0x07, 0x31, 0xC1, 0x48, 0x08, 0x0F, 0x0C, 0x31, 0x36, 0x0F // ILI9341_NGAMMA
 , 0x00 // end marker
@@ -277,8 +281,9 @@ void display_fill_rectangle( uint16_t x, uint16_t y, uint16_t w, uint16_t h, uin
     // Prepare whole line in a single buffer
     color = (color >> 8) | ((color & 0xFF) << 8);
     uint16_t line[DISPLAY_MAX_LINE_PIXELS];
-    for(x = 0; x < w; ++x) {
-      line[x] = color;
+    uint16_t i;
+    for(i = 0; i < w; ++i) {
+      line[i] = color;
     }
 
     display_select();
@@ -287,6 +292,36 @@ void display_fill_rectangle( uint16_t x, uint16_t y, uint16_t w, uint16_t h, uin
     uint32_t line_bytes = w * sizeof(color);
     for( y = h; y > 0; y-- ) {
         display_write( (uint8_t *)line, line_bytes );
+    }
+
+    display_deselect();
+}
+
+
+void display_fill_rectangle_dma( uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint16_t color) {
+    // clipping
+    if((x >= DISPLAY_WIDTH) || (y >= DISPLAY_HEIGHT)) return;
+    if((x + w - 1) >= DISPLAY_WIDTH) {
+      w = DISPLAY_WIDTH - x;
+    }
+    if((y + h - 1) >= DISPLAY_HEIGHT) {
+      h = DISPLAY_HEIGHT - y;
+    }
+
+    // Prepare whole line in a single buffer
+    color = (color >> 8) | ((color & 0xFF) << 8);
+    uint16_t line[DISPLAY_MAX_LINE_PIXELS];
+    uint16_t i;
+    for(i = 0; i < w; ++i) {
+      line[i] = color;
+    }
+
+    display_select();
+    display_set_addr_window_dma( x, y, w, h );
+    // after call display_set_addr_window() display in data mode
+    uint32_t line_bytes = w * sizeof(color);
+    for( y = h; y > 0; y-- ) {
+        display_spi_write( (uint8_t *)line, line_bytes );
     }
 
     display_deselect();

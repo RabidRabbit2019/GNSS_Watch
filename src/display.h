@@ -38,6 +38,7 @@
 void display_init();
 void display_init_dma();
 void display_fill_rectangle(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint16_t color);
+void display_fill_rectangle_dma( uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint16_t color);
 
 
 #endif // _DISPLAY_H_
