@@ -202,6 +202,13 @@ static void display_write_data( const uint8_t * a_buff, uint32_t a_buff_size ) {
 
 static void display_reset() {
   display_write_cmd( ILI9341_RESET );
+  delay_ms(150);
+}
+
+
+static void display_reset_dma() {
+  display_write_cmd_dma( ILI9341_RESET );
+  delay_ms(150);
 }
 
 
@@ -227,6 +234,33 @@ static void display_set_addr_window( uint16_t x, uint16_t y, uint16_t w, uint16_
   display_write_data( v_cmd_data, sizeof(v_cmd_data) );
   //
   display_write_cmd( ILI9341_GRAM );
+  display_data_mode();
+}
+
+
+static void display_set_addr_window_dma( uint16_t x, uint16_t y, uint16_t w, uint16_t h ) {
+  uint8_t v_cmd_data[4];
+  // data for X
+  v_cmd_data[0] = x >> 8;
+  v_cmd_data[1] = x;
+  x += w - 1;
+  v_cmd_data[2] = x >> 8;
+  v_cmd_data[3] = x;
+  // write
+  display_write_cmd_dma( ILI9341_COLUMN_ADDR );
+  display_write_data_dma( v_cmd_data, sizeof(v_cmd_data) );
+  // data for Y
+  v_cmd_data[0] = y >> 8;
+  v_cmd_data[1] = y;
+  y += h - 1;
+  v_cmd_data[2] = y >> 8;
+  v_cmd_data[3] = y;
+  // write
+  display_write_cmd_dma( ILI9341_PAGE_ADDR );
+  display_write_data_dma( v_cmd_data, sizeof(v_cmd_data) );
+  //
+  display_write_cmd_dma( ILI9341_GRAM );
+  display_data_mode();
 }
 
 
@@ -239,7 +273,6 @@ void display_fill_rectangle( uint16_t x, uint16_t y, uint16_t w, uint16_t h, uin
     if((y + h - 1) >= DISPLAY_HEIGHT) {
       h = DISPLAY_HEIGHT - y;
     }
-
 
     // Prepare whole line in a single buffer
     color = (color >> 8) | ((color & 0xFF) << 8);
@@ -295,9 +328,9 @@ void display_init_dma() {
   DMA_CH1PADDR(DMA0) = (uint32_t)&(SPI_DATA(SPI0));
   DMA_CH2PADDR(DMA0) = (uint32_t)&(SPI_DATA(SPI0));
   // reset sequence
-  display_reset();
-  delay_ms(5);
+  delay_ms(150);
   display_select();
+  display_reset_dma();
   // issue init commands set
   for ( const uint8_t * v_ptr = g_ili9341_init; *v_ptr; ) {
     // read data byte count, advance ptr
@@ -337,9 +370,9 @@ void display_init() {
   // set pullups and enable display backlight, display reset passive, deselect display, SCK low
   GPIO_BOP(GPIOA) = GPIO_BOP_BOP6 | GPIO_BOP_BOP8 | GPIO_BOP_BOP0 | GPIO_BOP_BOP4 | GPIO_BOP_CR5;
   // reset sequence
+  delay_ms(150);
   display_select();
   display_reset();
-  delay_ms(150);
   //
   // issue init commands set
   for ( const uint8_t * v_ptr = g_ili9341_init; 0 != *v_ptr; ) {
