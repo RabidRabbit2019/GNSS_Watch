@@ -2,6 +2,7 @@
 
 #include "n200_func.h"
 #include "gd32vf103.h"
+#include <zic_utils.h>
 
 
 #define ILI9341_RESET           0x01
@@ -77,12 +78,12 @@ extern volatile uint32_t g_milliseconds;
 void delay_ms( uint32_t a_ms );
 
 
-static void display_select() {
+void display_select() {
   GPIO_BOP(GPIOA) = GPIO_BOP_CR4;
 }
 
 
-static void display_deselect() {
+void display_deselect() {
   GPIO_BOP(GPIOA) = GPIO_BOP_BOP4;
 }
 
@@ -147,39 +148,6 @@ static void display_spi_write( const uint8_t * a_src, uint32_t a_size ) {
 }
 
 
-static void display_bit_delay() {
-  volatile int i;
-  for ( i = 0; i < 10; ++i ) {}
-}
-
-
-// syncronized data write (return when transfer completed)
-static void display_write( const uint8_t * a_src, uint32_t a_size ) {
-  while ( a_size ) {
-    uint8_t b = *a_src;
-    for ( int i = 0; i < 8; ++i ) {
-      if ( 0 == (0x80 & b) ) {
-        // 0
-        GPIO_BOP(GPIOA) = GPIO_BOP_CR7;
-      } else {
-        // 1
-        GPIO_BOP(GPIOA) = GPIO_BOP_BOP7;
-      }
-      display_bit_delay();
-      // rise SCK
-      GPIO_BOP(GPIOA) = GPIO_BOP_BOP5;
-      display_bit_delay();
-      // drop SCK
-      GPIO_BOP(GPIOA) = GPIO_BOP_CR5;
-      // shift next bit
-      b <<= 1;
-    }
-    ++a_src;
-    --a_size;
-  }
-}
-
-
 static void display_write_cmd_dma( uint8_t a_cmd ) {
   display_cmd_mode();
   display_spi_write( &a_cmd, sizeof(a_cmd) );
@@ -192,53 +160,9 @@ static void display_write_data_dma( const uint8_t * a_buff, uint32_t a_buff_size
 }
 
 
-static void display_write_cmd( uint8_t a_cmd ) {
-  display_cmd_mode();
-  display_write( &a_cmd, sizeof(a_cmd) );
-}
-
-
-static void display_write_data( const uint8_t * a_buff, uint32_t a_buff_size ) {
-  display_data_mode();
-  display_write( a_buff, a_buff_size );
-}
-
-
-static void display_reset() {
-  display_write_cmd( ILI9341_RESET );
-  delay_ms(150);
-}
-
-
 static void display_reset_dma() {
   display_write_cmd_dma( ILI9341_RESET );
   delay_ms(150);
-}
-
-
-static void display_set_addr_window( uint16_t x, uint16_t y, uint16_t w, uint16_t h ) {
-  uint8_t v_cmd_data[4];
-  // data for X
-  v_cmd_data[0] = x >> 8;
-  v_cmd_data[1] = x;
-  x += w - 1;
-  v_cmd_data[2] = x >> 8;
-  v_cmd_data[3] = x;
-  // write
-  display_write_cmd( ILI9341_COLUMN_ADDR );
-  display_write_data( v_cmd_data, sizeof(v_cmd_data) );
-  // data for Y
-  v_cmd_data[0] = y >> 8;
-  v_cmd_data[1] = y;
-  y += h - 1;
-  v_cmd_data[2] = y >> 8;
-  v_cmd_data[3] = y;
-  // write
-  display_write_cmd( ILI9341_PAGE_ADDR );
-  display_write_data( v_cmd_data, sizeof(v_cmd_data) );
-  //
-  display_write_cmd( ILI9341_GRAM );
-  display_data_mode();
 }
 
 
@@ -265,36 +189,6 @@ static void display_set_addr_window_dma( uint16_t x, uint16_t y, uint16_t w, uin
   //
   display_write_cmd_dma( ILI9341_GRAM );
   display_data_mode();
-}
-
-
-void display_fill_rectangle( uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint16_t color) {
-    // clipping
-    if((x >= DISPLAY_WIDTH) || (y >= DISPLAY_HEIGHT)) return;
-    if((x + w - 1) >= DISPLAY_WIDTH) {
-      w = DISPLAY_WIDTH - x;
-    }
-    if((y + h - 1) >= DISPLAY_HEIGHT) {
-      h = DISPLAY_HEIGHT - y;
-    }
-
-    // Prepare whole line in a single buffer
-    color = (color >> 8) | ((color & 0xFF) << 8);
-    uint16_t line[DISPLAY_MAX_LINE_PIXELS];
-    uint16_t i;
-    for(i = 0; i < w; ++i) {
-      line[i] = color;
-    }
-
-    display_select();
-    display_set_addr_window( x, y, w, h );
-    // after call display_set_addr_window() display in data mode
-    uint32_t line_bytes = w * sizeof(color);
-    for( y = h; y > 0; y-- ) {
-        display_write( (uint8_t *)line, line_bytes );
-    }
-
-    display_deselect();
 }
 
 
@@ -328,7 +222,7 @@ void display_fill_rectangle_dma( uint16_t x, uint16_t y, uint16_t w, uint16_t h,
 }
 
 
-// initialize display, ILI9341, 320x240, spi four lines
+// initialize display, ILI9341, 320x240, spi four lines, DMA transfers
 void display_init_dma() {
   // enable SP  // configure LCD pins (PA0 - RST, PA3 - DC, PA4 - CS, PA5 - SCK, PA6 - MISO, PA7 - MOSI, PA8 - backlight on/off)
   // PA6 - input with pullup, PA5, PA7 - output push-pull 50 MHz alternate fn
@@ -386,45 +280,118 @@ void display_init_dma() {
 }
 
 
-// initialize display, ILI9341, 320x240, serial 4-wire iterface, bitbang
-void display_init() {
-  // enable SP  // configure LCD pins (PA0 - RST, PA3 - DC, PA4 - CS, PA5 - SCK, PA6 - MISO, PA7 - MOSI, PA8 - backlight on/off)
-  // PA6 - input with pullup, PA5, PA7 - output push-pull 50 MHz alternate fn
-  // PA0, PA3, PA4, PA8 - output push-pull 2MHz
-  GPIO_CTL0(GPIOA) = (GPIO_CTL0(GPIOA) & ~(GPIO_MODE_MASK0(0) | GPIO_MODE_MASK0(3) | GPIO_MODE_MASK0(4) | GPIO_MODE_MASK0(5) | GPIO_MODE_MASK0(6)  | GPIO_MODE_MASK0(7)))
-                   | GPIO_MODE_SET0(0, 0x0F & (GPIO_MODE_OUT_PP | GPIO_OSPEED_10MHZ))
-                   | GPIO_MODE_SET0(3, 0x0F & (GPIO_MODE_OUT_PP | GPIO_OSPEED_10MHZ))
-                   | GPIO_MODE_SET0(4, 0x0F & (GPIO_MODE_OUT_PP | GPIO_OSPEED_10MHZ))
-                   | GPIO_MODE_SET0(5, 0x0F & (GPIO_MODE_OUT_PP | GPIO_OSPEED_10MHZ))
-                   | GPIO_MODE_SET0(6, 0x0F & GPIO_MODE_IPU)
-                   | GPIO_MODE_SET0(7, 0x0F & (GPIO_MODE_OUT_PP | GPIO_OSPEED_10MHZ))
-                   ;
-  GPIO_CTL1(GPIOA) = (GPIO_CTL1(GPIOA) & ~(GPIO_MODE_MASK1(8)))
-                   | GPIO_MODE_SET1(8, 0x0F & (GPIO_MODE_OUT_PP | GPIO_OSPEED_10MHZ))
-                   ;
-  // set pullups and enable display backlight, display reset passive, deselect display, SCK low
-  GPIO_BOP(GPIOA) = GPIO_BOP_BOP6 | GPIO_BOP_BOP8 | GPIO_BOP_BOP0 | GPIO_BOP_BOP4 | GPIO_BOP_CR5;
-  // reset sequence
-  delay_ms(150);
+void display_draw_zic_image( int x, int y, int w, int h, const uint8_t * a_data, int a_data_len ) {
+  uint8_t v_image_line1[DISPLAY_WIDTH * sizeof(uint16_t)];
+  uint8_t v_image_line2[DISPLAY_WIDTH * sizeof(uint16_t)];
+  if((x >= DISPLAY_WIDTH) || (y >= DISPLAY_HEIGHT)) return;
+  if((x + w - 1) >= DISPLAY_WIDTH) return;
+  if((y + h - 1) >= DISPLAY_HEIGHT) return;
+  uint32_t v_row_bytes = w * sizeof(uint16_t);
+
+  zic_decompress_state_s v_st;
+  zic_decompress_init( a_data, a_data_len, v_image_line1, w, h, &v_st );
+
   display_select();
-  display_reset();
-  //
-  // issue init commands set
-  for ( const uint8_t * v_ptr = g_ili9341_init; 0 != *v_ptr; ) {
-    // read data byte count, advance ptr
-    uint32_t v_cnt = *v_ptr++;
-    // read cmd byte, advance ptr
-    uint8_t v_cmd = *v_ptr++;
-    // write cmd
-    display_write_cmd( v_cmd );
-    // write cmd dta
-    display_write_data( v_ptr, v_cnt );
-    // advance ptr
-    v_ptr += v_cnt;
+  display_set_addr_window_dma((uint16_t)x, (uint16_t)y, (uint16_t)(x+w), (uint16_t)(y+h));
+
+  if ( h > 0 ) {
+    if ( zic_decompress_row( &v_st ) ) {
+      display_spi_write_start( v_image_line1, v_row_bytes );
+      for ( --h; h > 0; --h ) {
+        v_st.m_row_ptr = v_image_line2;
+        if ( zic_decompress_row( &v_st ) ) {
+          display_spi_write_end();
+          display_spi_write_start( v_image_line2, v_row_bytes );
+        } else {
+          break;
+        }
+        if ( --h <= 0 ) {
+          break;
+        }
+        v_st.m_row_ptr = v_image_line1;
+        if ( zic_decompress_row( &v_st ) ) {
+          display_spi_write_end();
+          display_spi_write_start( v_image_line1, v_row_bytes );
+        } else {
+          break;
+        }
+      }
+    }
+    display_spi_write_end();
   }
-  display_write_cmd( ILI9341_SLEEP_OUT );
-  delay_ms(6);
-  display_write_cmd( ILI9341_DISPLAY_ON );
-  //
+  
   display_deselect();
+}
+
+
+// draw char using double-buffer:
+// 1. prepare line N
+// 2. wait for SPI xfer ends for line N-1
+// 2. start write line N via SPI
+// 3. prepare line N+1
+// 4. wait for SPI xfer ends for line N
+// 5. start write line N+1 via SPI
+// 6. N+=2, goto 1
+void display_write_char(uint16_t x, uint16_t y, display_char_s * a_data) {
+  bool v_last_row = false;
+  uint32_t v_bytes_to_write = a_data->m_cols_count * sizeof(uint16_t);
+  uint16_t line_buf1[MAX_FONT_WIDTH]; // max font width
+  uint16_t line_buf2[MAX_FONT_WIDTH]; // max font width
+  
+  display_set_addr_window_dma(x, y, a_data->m_cols_count, a_data->m_font->m_row_height);
+  
+  // write line 1
+  a_data->m_pixbuf = line_buf1;
+  v_last_row = display_char_row( a_data );
+  display_spi_write_start((uint8_t *)line_buf1, v_bytes_to_write);
+  //
+  while ( !v_last_row ) {
+    // write line 2
+    a_data->m_pixbuf = line_buf2;
+    v_last_row = display_char_row( a_data );
+    display_spi_write_end();
+    display_spi_write_start((uint8_t *)line_buf2, v_bytes_to_write);
+    if ( v_last_row ) {
+      break;
+    }
+    // write line 1
+    a_data->m_pixbuf = line_buf1;
+    v_last_row = display_char_row( a_data );
+    display_spi_write_end();
+    display_spi_write_start((uint8_t *)line_buf1, v_bytes_to_write);
+  }
+  // end wait
+  display_spi_write_end();
+}
+
+
+void display_write_string(uint16_t x, uint16_t y, const char* str, const packed_font_desc_s * fnt, uint16_t color, uint16_t bgcolor) {
+    bool v_used = false;
+    display_char_s v_ds;
+    uint16_t v_colors[8];
+
+    display_select();
+
+    for ( uint32_t c = get_next_utf8_code( &str ); 0 != c; c = get_next_utf8_code( &str ) ) {
+        if ( !v_used ) {
+          v_used = true;
+          display_char_init( &v_ds, c, fnt, 0, bgcolor, color, v_colors );
+        } else {
+          display_char_init2( &v_ds, c );
+        }
+        
+        if ( (x + v_ds.m_symbol->m_x_advance) >= DISPLAY_WIDTH ) {
+            x = 0;
+            y += v_ds.m_font->m_row_height;
+            
+            if ( (y + v_ds.m_font->m_row_height) >= DISPLAY_HEIGHT ) {
+                break;
+            }
+        }
+
+        display_write_char(x, y, &v_ds);
+        x += v_ds.m_symbol->m_x_advance;
+    }
+
+    display_deselect();
 }

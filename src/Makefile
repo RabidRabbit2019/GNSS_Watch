@@ -5,10 +5,17 @@ a.elf: libbaremetal/lib/libc.a libbaremetal/lib/libm.a
           startup.S \
           n200_func.c \
           display.c \
+          fonts/font_bmp.c \
+          images/zic_utils.c \
+          fonts/font_22_24.c \
+          images/flag_320_240.c \
           init.c \
           main.c \
-          -O0 -g -march=rv32imac -mabi=ilp32 -ffunction-sections -fdata-sections \
+          -Os -s -flto -march=rv32imac -mabi=ilp32 -ffunction-sections -fdata-sections \
           -nostartfiles -ffreestanding -nostdlib -nodefaultlibs \
+          -I./libbaremetal/include \
+          -I./images \
+          -I./fonts \
           -L./libbaremetal/lib -Wl,-gc-sections -Wl,-TGD32VF103C8Tx_FLASH.ld \
           -o a.elf
 

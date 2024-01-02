@@ -2,7 +2,8 @@
 
 #include "n200_func.h"
 #include "gd32vf103.h"
-
+#include <flag_320_240.h>
+#include <font_22_24.h>
 
 void delay_ms( uint32_t a_ms );
 
@@ -48,11 +49,14 @@ void main() {
   // init display
   display_init_dma();
   // test display
-  display_fill_rectangle_dma( 0, 0, 320, 240, DISPLAY_COLOR_BLUE );
-  display_fill_rectangle_dma( 40, 40, 240, 160, DISPLAY_COLOR_RED );
-  display_fill_rectangle_dma( 80, 80, 160, 80, DISPLAY_COLOR_GREEN );
-  
-  
+  display_draw_zic_image( 0, 0, Iflag_320_240_tga_width, Iflag_320_240_tga_height, Iflag_320_240_tga_zic, sizeof(Iflag_320_240_tga_zic) );
+  //
+  delay_ms( 2000 );
+  //
+  display_fill_rectangle_dma( 0, 0, DISPLAY_WIDTH, DISPLAY_HEIGHT, DISPLAY_COLOR_BLACK );
+  //
+  display_write_string( 0, 0, "board: Longan Nano", &font_22_24_font, DISPLAY_COLOR_YELLOW, DISPLAY_COLOR_BLACK );
+  display_write_string( 0, 24, "mcu: GD32VF103 (riscv32)", &font_22_24_font, DISPLAY_COLOR_YELLOW, DISPLAY_COLOR_BLACK );
   // loop
   for (;;) {
     delay_ms(250);

@@ -55,7 +55,7 @@ void startup_code(void) {
   // APB1 = AHB/2
   RCU_CFG0 |= RCU_APB1_CKAHB_DIV2;
   // find divider and multiplicant
-  bool v_found = FALSE;
+  bool v_found = false;
   uint32_t v_div, v_mul;
   for ( v_div = 1u; v_div <= 16u; ++v_div ) {
     for ( v_mul = 2u; v_mul <= 32u; ++v_mul ) {
