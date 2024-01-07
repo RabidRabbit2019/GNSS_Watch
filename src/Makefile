@@ -8,6 +8,7 @@ a.elf: libbaremetal/lib/libc.a libbaremetal/lib/libm.a
           fonts/font_bmp.c \
           images/zic_utils.c \
           fonts/font_22_24.c \
+          fonts/font_110_110.c \
           images/flag_320_240.c \
           init.c \
           main.c \

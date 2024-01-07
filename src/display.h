@@ -10,6 +10,8 @@
 #define DISPLAY_WIDTH             320
 #define DISPLAY_HEIGHT            240
 #define DISPLAY_MAX_LINE_PIXELS   DISPLAY_WIDTH
+// use for display time: 5 symbols  "10:23"
+#define MAX_ONE_STR_SYMBOLS       5
 
 
 // Color definitions
@@ -42,6 +44,16 @@ void display_fill_rectangle_dma( uint16_t x, uint16_t y, uint16_t w, uint16_t h,
 void display_draw_zic_image( int x, int y, int w, int h, const uint8_t * a_data, int a_data_len );
 void display_write_string(uint16_t x, uint16_t y, const char* str, const packed_font_desc_s * fnt, uint16_t color, uint16_t bgcolor);
 void display_write_char(uint16_t x, uint16_t y, display_char_s * a_data);
+void diplay_write_string_with_background(
+              int a_x
+            , int a_y
+            , int a_width
+            , int a_height
+            , const char * a_str
+            , const packed_font_desc_s * a_fnt
+            , uint16_t a_color
+            , uint16_t a_bgcolor
+            );
 void display_select();
 void display_deselect();
 
