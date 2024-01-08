@@ -156,6 +156,7 @@ SECTIONS
     __bss_start__ = _sbss;
     *(.bss)
     *(.bss*)
+    *(.sbss)
     *(COMMON)
 
     . = ALIGN(4);

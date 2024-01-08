@@ -1,6 +1,6 @@
 #include <limits.h>
-#include "../../include/time.h"
-#include "../../include/errno.h"
+#include <time.h>
+#include <errno.h>
 
 
 /* 2000-03-01 (mod 400 year, immediately after feb29 */

@@ -10,6 +10,7 @@ int errno = 0;
 void dummy_libc(void) {
 }
 
+
 #ifdef __cplusplus
 }
 #endif
