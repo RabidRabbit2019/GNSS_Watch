@@ -242,11 +242,11 @@ void display_init_dma() {
   GPIO_BOP(GPIOA) = GPIO_BOP_BOP6 | GPIO_BOP_BOP8 | GPIO_BOP_BOP0 | GPIO_BOP_BOP4;
   // enable SPI0 clocks
   RCU_APB2EN |= RCU_APB2EN_SPI0EN;
-  // SPI clock = APB2 clock / 8 (64 / 8 = 8 MHz), master mode
+  // SPI clock = APB2 clock / 4 (64 / 4 = 16 MHz), master mode
   SPI_CTL0(SPI0) = SPI_CTL0_SWNSSEN
                  | SPI_CTL0_SWNSS
                  | SPI_CTL0_SPIEN
-                 | SPI_PSC_8
+                 | SPI_PSC_4
                  | SPI_CTL0_MSTMOD
                  ;
   // prepare DMA for SPI0
@@ -448,8 +448,8 @@ void diplay_write_string_with_background(
     uint16_t v_colors[8]; // dummy
     uint16_t v_colors_1[8];
     uint16_t v_colors_2[8];
-    build_colors_table( a_bgcolor_1, a_color,v_colors_1 );
-    build_colors_table( a_bgcolor_2, a_color,v_colors_2 );
+    build_colors_table( a_bgcolor_1, a_color, v_colors_1 );
+    build_colors_table( a_bgcolor_2, a_color, v_colors_2 );
     // display line buffers
     uint16_t line_buf[DISPLAY_MAX_LINE_PIXELS];
     uint16_t line_buf1[DISPLAY_MAX_LINE_PIXELS];
