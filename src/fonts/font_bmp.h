@@ -65,6 +65,8 @@ void display_char_init( display_char_s * a_data, uint32_t a_code, const packed_f
 void display_char_init2( display_char_s * a_data, uint32_t a_code );
 // prepare to display symbol, init a_data structure using font and colors from other
 void display_char_init3( display_char_s * a_data, uint32_t a_code, uint16_t * a_dst_row, display_char_s * a_from );
+// build colors table
+void build_colors_table( uint16_t a_bgcolor, uint16_t a_fgcolor, uint16_t * a_colors_tbl );
 
 // prepare one row pixels buffer, returns true, if it was last row
 bool display_char_row( display_char_s * a_data );

@@ -25,7 +25,7 @@
 #define DISPLAY_COLOR_LIGHTGREY   0xC618      /* 192, 192, 192 */
 #define DISPLAY_COLOR_DARKGREY    0x39E7      /* 128, 128, 128 */
 #define DISPLAY_COLOR_BLUE        0x001F      /*   0,   0, 255 */
-#define DISPLAY_COLOR_DARKBLUE    0x787F      /*   0,   0, 255 */
+#define DISPLAY_COLOR_DARKBLUE    0x000F      /*   0,   0, 255 */
 #define DISPLAY_COLOR_CYBLUE      0x03FF      /*   0,   0, 255 */
 #define DISPLAY_COLOR_GREEN       0x07E0      /*   0, 255,   0 */
 #define DISPLAY_COLOR_CYAN        0x07FF      /*   0, 255, 255 */
@@ -52,7 +52,9 @@ void diplay_write_string_with_background(
             , const char * a_str
             , const packed_font_desc_s * a_fnt
             , uint16_t a_color
-            , uint16_t a_bgcolor
+            , uint16_t a_bgcolor_1
+            , uint16_t a_bgcolor_2
+            , int a_seconds
             );
 void display_select();
 void display_deselect();

@@ -53,9 +53,9 @@ void main() {
   // init display
   display_init_dma();
   // test display
-  display_draw_zic_image( 0, 0, Iflag_320_240_tga_width, Iflag_320_240_tga_height, Iflag_320_240_tga_zic, sizeof(Iflag_320_240_tga_zic) );
+  //display_draw_zic_image( 0, 0, Iflag_320_240_tga_width, Iflag_320_240_tga_height, Iflag_320_240_tga_zic, sizeof(Iflag_320_240_tga_zic) );
   //
-  delay_ms( 2000 );
+  //delay_ms( 2000 );
   //
   display_fill_rectangle_dma( 0, 0, DISPLAY_WIDTH, DISPLAY_HEIGHT, DISPLAY_COLOR_BLACK );
   //
@@ -92,24 +92,22 @@ void main() {
       , &font_110_110_font
       , DISPLAY_COLOR_WHITE
       , DISPLAY_COLOR_DARKBLUE
+      , DISPLAY_COLOR_DARKGREEN
+      , v_tm.tm_sec
       );
-    //
-    delay_ms(250);
     // set 0 for PC13 (R led ON)
     GPIO_BOP(GPIOC) |= GPIO_BOP_CR13;
-    delay_ms(250);
+    delay_ms(25);
     // set 1 for PC13 (R led OFF)
     GPIO_BOP(GPIOC) |= GPIO_BOP_BOP13;
-    delay_ms(250);
     // set 0 for PA1 (G led ON)
     GPIO_BOP(GPIOA) |= GPIO_BOP_CR1;
-    delay_ms(250);
+    delay_ms(25);
     // set 1 for PA1 (G led OFF)
     GPIO_BOP(GPIOA) |= GPIO_BOP_BOP1;
-    delay_ms(250);
     // set 0 for PA2 (B led ON)
     GPIO_BOP(GPIOA) |= GPIO_BOP_CR2;
-    delay_ms(250);
+    delay_ms(25);
     // set 1 for PA2 (B led OFF)
     GPIO_BOP(GPIOA) |= GPIO_BOP_BOP2;
   }

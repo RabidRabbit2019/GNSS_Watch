@@ -416,6 +416,17 @@ static bool prepare_char_line( uint16_t * a_buf, display_char_s * a_symbols, int
 }
 
 
+static void translate_dummy( uint16_t * a_dst, uint16_t * a_src, uint16_t * a_colors_1, uint16_t * a_colors_2, int a_last_color1_column, int a_width ) {
+  int i;
+  for ( i = 0; i < a_last_color1_column; ++i ) {
+    a_dst[i] = a_colors_1[a_src[i]];
+  }
+  for ( ; i < a_width; ++i ) {
+    a_dst[i] = a_colors_2[a_src[i]];
+  }
+}
+
+
 // draw string a_str within rectangle(a_width, a_height) at a_x, a_y
 // string for 8 or less symbols, one line
 // flicker-free display - line by line for entire rectangle with double-buffer
@@ -427,13 +438,20 @@ void diplay_write_string_with_background(
             , const char * a_str
             , const packed_font_desc_s * a_fnt
             , uint16_t a_color
-            , uint16_t a_bgcolor
+            , uint16_t a_bgcolor_1
+            , uint16_t a_bgcolor_2
+            , int a_seconds
             ) {
     // buffer for all display symbols
     display_char_s v_ds[MAX_ONE_STR_SYMBOLS];
     // display colors
-    uint16_t v_colors[8];
+    uint16_t v_colors[8]; // dummy
+    uint16_t v_colors_1[8];
+    uint16_t v_colors_2[8];
+    build_colors_table( a_bgcolor_1, a_color,v_colors_1 );
+    build_colors_table( a_bgcolor_2, a_color,v_colors_2 );
     // display line buffers
+    uint16_t line_buf[DISPLAY_MAX_LINE_PIXELS];
     uint16_t line_buf1[DISPLAY_MAX_LINE_PIXELS];
     uint16_t line_buf2[DISPLAY_MAX_LINE_PIXELS];
     // get text bounds
@@ -455,7 +473,7 @@ void diplay_write_string_with_background(
       // prepare display structure
       // buffer ptr set to 0 (zero), as it use double buffering by line
       if ( 0 == v_symbols_count ) {
-        display_char_init( &v_ds[v_symbols_count], c, a_fnt, 0, a_bgcolor, a_color, v_colors );
+        display_char_init( &v_ds[v_symbols_count], c, a_fnt, 0, 0, 0x0007, v_colors );
       } else {
         // reuse font, and colors from prev symbol
         display_char_init3( &v_ds[v_symbols_count], c, 0, &v_ds[v_symbols_count - 1] );
@@ -472,13 +490,17 @@ void diplay_write_string_with_background(
     }
     // prepare paddings for line buffers
     for ( int i = 0; i < v_start_str_column; ++i ) {
-      line_buf1[i] = a_bgcolor;
-      line_buf2[i] = a_bgcolor;
+      line_buf[i] = 0;
     }
     for ( int i = v_symbol_column; i < a_width; ++i ) {
-      line_buf1[i] = a_bgcolor;
-      line_buf2[i] = a_bgcolor;
+      line_buf[i] = 0;
     }
+    // prepare indices for colors
+    for ( int i = 0; i < 8; ++i ) {
+      v_colors[i] = (uint16_t)i;
+    }
+    //
+    int v_last_color1_column = (a_width * a_seconds) / 60;
 
     bool v_last_row = false;
     uint32_t bytes_to_write = a_width * sizeof(uint16_t);
@@ -489,23 +511,25 @@ void diplay_write_string_with_background(
     display_set_addr_window_dma( a_x, a_y, a_width, a_height );
 
     // line by line double buffered display
-    uint16_t * start_line_buf1 = line_buf1 + v_start_str_column;
-    uint16_t * start_line_buf2 = line_buf2 + v_start_str_column;
+    uint16_t * start_line_buf = line_buf + v_start_str_column;
     
     // write line 1
-    v_last_row = prepare_char_line( start_line_buf1, v_ds, v_symbols_count );
+    v_last_row = prepare_char_line( start_line_buf, v_ds, v_symbols_count );
+    translate_dummy( line_buf1, line_buf, v_colors_1, v_colors_2, v_last_color1_column, a_width );
     display_spi_write_start( (uint8_t *)line_buf1, bytes_to_write );
     //
     while ( !v_last_row ) {
       // write line 2
-      v_last_row = prepare_char_line( start_line_buf2, v_ds, v_symbols_count );
+      v_last_row = prepare_char_line( start_line_buf, v_ds, v_symbols_count );
+      translate_dummy( line_buf2, line_buf, v_colors_1, v_colors_2, v_last_color1_column, a_width );
       display_spi_write_end();
       display_spi_write_start((uint8_t *)line_buf2, bytes_to_write);
       if ( v_last_row ) {
         break;
       }
       // write line 1
-      v_last_row = prepare_char_line( start_line_buf1, v_ds, v_symbols_count );
+      v_last_row = prepare_char_line( start_line_buf, v_ds, v_symbols_count );
+      translate_dummy( line_buf1, line_buf, v_colors_1, v_colors_2, v_last_color1_column, a_width );
       display_spi_write_end();
       display_spi_write_start((uint8_t *)line_buf1, bytes_to_write);
     }

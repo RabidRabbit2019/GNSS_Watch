@@ -44,6 +44,30 @@ static uint16_t pack_color( rgb_unpacked_s * a_src ) {
     );
 }
 
+
+// prepare colors table
+void build_colors_table( uint16_t a_bgcolor, uint16_t a_fgcolor, uint16_t * a_colors_tbl ) {
+  rgb_unpacked_s v_rgb_bg;
+  rgb_unpacked_s v_rgb_fg;
+  rgb_unpacked_s v_rgb;
+  unpack_color( &(v_rgb_bg), a_bgcolor );
+  unpack_color( &(v_rgb_fg), a_fgcolor );
+  for ( int i = 0; i < 8; ++i ) {
+    v_rgb.r = ((v_rgb_bg.r * (7 - i)) / 7)
+            + ((v_rgb_fg.r * i) / 7)
+            ;
+    v_rgb.g = ((v_rgb_bg.g * (7 - i)) / 7)
+            + ((v_rgb_fg.g * i) / 7)
+            ;
+    v_rgb.b = ((v_rgb_bg.b * (7 - i)) / 7)
+            + ((v_rgb_fg.b * i) / 7)
+            ;
+    uint16_t v_c = pack_color( &v_rgb );
+    a_colors_tbl[i] = (v_c >> 8) | (v_c << 8);
+  }
+}
+
+
 // prepare to display symbol, init a_data structure
 void display_char_init(
         display_char_s * a_data
@@ -67,25 +91,8 @@ void display_char_init(
   a_data->m_last_row = a_data->m_symbol->m_y_offset + a_data->m_symbol->m_height;
   a_data->m_last_col = a_data->m_symbol->m_x_offset + a_data->m_symbol->m_width;
   // gen colors table
+  build_colors_table( a_bgcolor, a_fgcolor, a_colors_tbl );
   a_data->m_colors = a_colors_tbl;
-  rgb_unpacked_s v_rgb_bg;
-  rgb_unpacked_s v_rgb_fg;
-  rgb_unpacked_s v_rgb;
-  unpack_color( &(v_rgb_bg), a_bgcolor );
-  unpack_color( &(v_rgb_fg), a_fgcolor );
-  for ( int i = 0; i < 8; ++i ) {
-    v_rgb.r = ((v_rgb_bg.r * (7 - i)) / 7)
-            + ((v_rgb_fg.r * i) / 7)
-            ;
-    v_rgb.g = ((v_rgb_bg.g * (7 - i)) / 7)
-            + ((v_rgb_fg.g * i) / 7)
-            ;
-    v_rgb.b = ((v_rgb_bg.b * (7 - i)) / 7)
-            + ((v_rgb_fg.b * i) / 7)
-            ;
-    uint16_t v_c = pack_color( &v_rgb );
-    a_data->m_colors[i] = (v_c >> 8) | (v_c << 8);
-  }
 }
 
 
