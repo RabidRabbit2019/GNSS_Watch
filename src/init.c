@@ -30,6 +30,7 @@ const uint32_t g_predv0_divs[16] = {
 
 uint32_t SystemCoreClock = HXTAL_VALUE;
 volatile uint32_t g_milliseconds = 0u;
+volatile int g_exti0_flag = 0;
 
 
 void startup_code(void) {

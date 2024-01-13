@@ -240,8 +240,7 @@ void display_init_dma() {
                    ;
   // set pullups and enable display backlight, display reset passive, deselect display
   GPIO_BOP(GPIOA) = GPIO_BOP_BOP6 | GPIO_BOP_BOP8 | GPIO_BOP_BOP0 | GPIO_BOP_BOP4;
-  // enable SPI0 clocks
-  RCU_APB2EN |= RCU_APB2EN_SPI0EN;
+  // SPI0 clocks enabled in main.c
   // SPI clock = APB2 clock / 4 (64 / 4 = 16 MHz), master mode
   SPI_CTL0(SPI0) = SPI_CTL0_SWNSSEN
                  | SPI_CTL0_SWNSS
@@ -250,8 +249,7 @@ void display_init_dma() {
                  | SPI_CTL0_MSTMOD
                  ;
   // prepare DMA for SPI0
-  // enable DMA0 clocks 
-  RCU_AHBEN |= RCU_AHBEN_DMA0EN;
+  // DMA0 clocks enabled in main.c
   // enable receive and transmit
   SPI_CTL1(SPI0) = SPI_CTL1_DMAREN | SPI_CTL1_DMATEN;
   DMA_CH1PADDR(DMA0) = (uint32_t)&(SPI_DATA(SPI0));

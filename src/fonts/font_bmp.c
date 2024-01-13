@@ -28,7 +28,7 @@ static int find_symbol_index( const packed_font_desc_s * a_font, uint32_t a_code
 }
 
 
-// unpack from R5G6R5 to R8, G8, B8
+// unpack from R5G6B5 to R8, G8, B8
 static void unpack_color( rgb_unpacked_s * a_dst, uint16_t a_color ) {
   a_dst->r = (a_color >> 8) & 0xF8;
   a_dst->g = (a_color >> 3) & 0xFC;

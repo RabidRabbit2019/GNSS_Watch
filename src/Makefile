@@ -11,8 +11,9 @@ a.elf: libbaremetal/lib/libc.a libbaremetal/lib/libm.a
           fonts/font_110_110.c \
           images/flag_320_240.c \
           init.c \
+          gnss.c \
           main.c \
-          -Os -s -flto -march=rv32imac -mabi=ilp32 -ffunction-sections -fdata-sections \
+          -O0 -g -march=rv32imac -mabi=ilp32 -ffunction-sections -fdata-sections \
           -nostartfiles -ffreestanding -nostdlib -nodefaultlibs \
           -I./libbaremetal/include \
           -I./images \
