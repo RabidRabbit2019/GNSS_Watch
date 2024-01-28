@@ -19,6 +19,8 @@ char *strchr(const char *s, int c);
 char *strchrnul(const char *s, int c);
 size_t strnlen(const char *s, size_t n);
 size_t strlen(const char *s);
+size_t strcspn(const char *s, const char *c);
+char *strsep(char **str, const char *sep);
 
 #ifdef __cplusplus
 }

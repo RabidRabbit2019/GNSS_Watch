@@ -1,7 +1,9 @@
+TOOLS=/home/vzaytsev/tools/riscv-gcc/bin/
+
 all: a.elf
 
 a.elf: libbaremetal/lib/libc.a libbaremetal/lib/libm.a
-	riscv64-unknown-elf-gcc -DCK_SYS_VALUE=64000000 \
+	$(TOOLS)riscv64-unknown-elf-gcc -DCK_SYS_VALUE=64000000 \
           startup.S \
           n200_func.c \
           display.c \
@@ -10,10 +12,15 @@ a.elf: libbaremetal/lib/libc.a libbaremetal/lib/libm.a
           fonts/font_22_24.c \
           fonts/font_110_110.c \
           images/flag_320_240.c \
+          images/alarm_clock.c \
+          images/gnss_no.c \
+          images/gnss_ok.c \
+          images/settings.c \
           init.c \
           gnss.c \
+          render.c \
           main.c \
-          -O0 -g -march=rv32imac -mabi=ilp32 -ffunction-sections -fdata-sections \
+          -Os -s -flto -march=rv32imac_zicsr -mabi=ilp32 -ffunction-sections -fdata-sections \
           -nostartfiles -ffreestanding -nostdlib -nodefaultlibs \
           -I./libbaremetal/include \
           -I./images \

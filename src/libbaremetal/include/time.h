@@ -24,6 +24,7 @@ struct tm {
 };
 
 struct tm *gmtime_r (const time_t *, struct tm *);
+time_t timegm(struct tm *tm);
 
 #ifdef __cplusplus
 }

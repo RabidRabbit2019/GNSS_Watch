@@ -1,11 +1,10 @@
 #include "display.h"
 #include "gnss.h"
+#include "render.h"
 
 #include "n200_func.h"
 #include "gd32vf103.h"
 #include <flag_320_240.h>
-#include <font_22_24.h>
-#include <font_110_110.h>
 #include <time.h>
 #include <string.h>
 #include <stdio.h>
@@ -13,8 +12,6 @@
 
 void delay_ms( uint32_t a_ms );
 
-
-char v_tmp_line[64];
 
 void main() {
   
@@ -70,69 +67,24 @@ void main() {
   display_init_dma();
   //
   init_GNSS();
+  init_RENDER();
   // test display
   //display_draw_zic_image( 0, 0, Iflag_320_240_tga_width, Iflag_320_240_tga_height, Iflag_320_240_tga_zic, sizeof(Iflag_320_240_tga_zic) );
-  //
   //delay_ms( 2000 );
   // clear display with black
   display_fill_rectangle_dma( 0, 0, DISPLAY_WIDTH, DISPLAY_HEIGHT, DISPLAY_COLOR_BLACK );
   //
-  char v_time_str[6];
-  v_time_str[2] = ':';
-  v_time_str[5] = '\0';
-  //
-  time_t v_time = 1700000000;
   uint32_t v_ts = g_milliseconds;
-  struct tm v_tm;
-  gmtime_r( &v_time, &v_tm );
-  //
-  uint32_t v_int_counter = 0;
-  //
-  // display_write_string( 0, 140, "board: Longan Nano", &font_22_24_font, DISPLAY_COLOR_YELLOW, DISPLAY_COLOR_BLACK );
-  // display_write_string( 0, 164, "mcu: GD32VF103 (riscv32)", &font_22_24_font, DISPLAY_COLOR_YELLOW, DISPLAY_COLOR_BLACK );
   // loop
   for (;;) {
     //
     uint32_t v_diff = (uint32_t)(g_milliseconds - v_ts);
     if ( v_diff > 1000u ) {
-      ++v_time;
+      ++g_time;
       v_ts += 1000u;
-      gmtime_r( &v_time, &v_tm );
     }
     //
-    v_time_str[0] = (v_tm.tm_hour / 10) + '0';
-    v_time_str[1] = (v_tm.tm_hour % 10) + '0';
-    v_time_str[3] = (v_tm.tm_min / 10) + '0';
-    v_time_str[4] = (v_tm.tm_min % 10) + '0';
-    diplay_write_string_with_background(
-        0
-      , 0
-      , DISPLAY_WIDTH
-      , font_110_110_font.m_row_height
-      , v_time_str
-      , &font_110_110_font
-      , DISPLAY_COLOR_WHITE
-      , v_tm.tm_min & 1 ? DISPLAY_COLOR_DARKBLUE : DISPLAY_COLOR_DARKGREEN
-      , v_tm.tm_min & 1 ? DISPLAY_COLOR_DARKGREEN : DISPLAY_COLOR_DARKBLUE
-      , v_tm.tm_sec
-      );
-    /*
-    // set 0 for PC13 (R led ON)
-    GPIO_BOP(GPIOC) |= GPIO_BOP_CR13;
-    delay_ms(25);
-    // set 1 for PC13 (R led OFF)
-    GPIO_BOP(GPIOC) |= GPIO_BOP_BOP13;
-    // set 0 for PA1 (G led ON)
-    GPIO_BOP(GPIOA) |= GPIO_BOP_CR1;
-    delay_ms(25);
-    // set 1 for PA1 (G led OFF)
-    GPIO_BOP(GPIOA) |= GPIO_BOP_BOP1;
-    // set 0 for PA2 (B led ON)
-    GPIO_BOP(GPIOA) |= GPIO_BOP_CR2;
-    delay_ms(25);
-    // set 1 for PA2 (B led OFF)
-    GPIO_BOP(GPIOA) |= GPIO_BOP_BOP2;
-    */
     time_slice_GNSS();
+    time_slice_RENDER();
   }
 }

@@ -106,6 +106,8 @@ SECTIONS
     . = ALIGN(4);
     *(.rodata)         /* .rodata sections (constants, strings, etc.) */
     *(.rodata*)        /* .rodata* sections (constants, strings, etc.) */
+    *(.srodata)
+    *(.srodata*)
     . = ALIGN(4);
   } >FLASH
 
@@ -141,6 +143,7 @@ SECTIONS
     _sdata = .;        /* create a global symbol at data start */
     *(.data)           /* .data sections */
     *(.data*)          /* .data* sections */
+    *(.sdata*)          /* .sdata* sections */
 
     . = ALIGN(4);
     _edata = .;        /* define a global symbol at data end */
@@ -157,6 +160,7 @@ SECTIONS
     *(.bss)
     *(.bss*)
     *(.sbss)
+    *(.sbss*)
     *(COMMON)
 
     . = ALIGN(4);
