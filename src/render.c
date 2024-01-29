@@ -1,6 +1,7 @@
 #include "render.h"
 #include "gnss.h"
 #include "display.h"
+#include "rtc.h"
 #include <font_22_24.h>
 #include <font_110_110.h>
 #include <gnss_ok.h>
@@ -16,19 +17,53 @@
 #define RENDER_MODE_ALARM     1
 #define RENDER_MODE_SETTINGS  2
 
-static const char * g_month_names[] = {
-  "Января"
-, "Февраля"
-, "Марта"
-, "Апреля"
-, "Мая"
-, "Июня"
-, "Июля"
-, "Августа"
-, "Сентября"
-, "Октября"
-, "Ноября"
-, "Декабря"
+static const char * g_lang_names[3] = {
+  "RUS", "ENG", "FRA"
+};
+
+static const char * g_month_names[3][12] = {
+  {
+    "Января"
+  , "Февраля"
+  , "Марта"
+  , "Апреля"
+  , "Мая"
+  , "Июня"
+  , "Июля"
+  , "Августа"
+  , "Сентября"
+  , "Октября"
+  , "Ноября"
+  , "Декабря"
+  }
+, {
+    "January"
+  , "February"
+  , "March"
+  , "April"
+  , "May"
+  , "June"
+  , "July"
+  , "August"
+  , "September"
+  , "October"
+  , "November"
+  , "December"
+}
+, {
+    "Janvier"
+  , "Février"
+  , "Mars"
+  , "Avril"
+  , "Mai"
+  , "Juin"
+  , "Juillet"
+  , "Août"
+  , "Septembre"
+  , "Octobre"
+  , "Novembre"
+  , "Décembre"
+}
 };
 
 
@@ -43,6 +78,7 @@ static int g_render_mode = RENDER_MODE_CLOCK;
 static int g_rended_mode_last = RENDER_MODE_CLOCK;
 static int g_bgcolor_index = 0;
 static int g_last_tm_min = 0;
+static int g_lang_index = 0;
 static uint32_t g_bgcolors_current = DISPLAY_COLOR_DARKRED | (DISPLAY_COLOR_DARKGREEN << 16);
 
 
@@ -67,7 +103,8 @@ static void render_clock() {
   struct tm v_tm;
   char v_str[32];
   
-  gmtime_r( &g_time, &v_tm );
+  time_t v_time = ( g_rtc_initialized ? rtc_get_cnt(g_time) : g_time ) + g_time_zone;
+  gmtime_r( &v_time, &v_tm );
   // каждую минуту меняем пару цветов фона
   if ( v_tm.tm_min != g_last_tm_min ) {
     g_last_tm_min = v_tm.tm_min;
@@ -89,7 +126,7 @@ static void render_clock() {
     );
   // отображение даты
   int v_y = font_110_110_font.m_row_height;
-  snprintf( v_str, sizeof(v_str), "%d %s %d", v_tm.tm_mday, g_month_names[v_tm.tm_mon % 12], v_tm.tm_year + 1900 );
+  snprintf( v_str, sizeof(v_str), "%d %s %d", v_tm.tm_mday, g_month_names[g_lang_index][v_tm.tm_mon % 12], v_tm.tm_year + 1900 );
   diplay_write_string_with_background(
       0
     , v_y

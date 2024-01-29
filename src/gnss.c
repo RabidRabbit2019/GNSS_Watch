@@ -1,5 +1,6 @@
 #include "gnss.h"
 #include "display.h"
+#include "rtc.h"
 
 #include "n200_func.h"
 #include "gd32vf103.h"
@@ -91,9 +92,12 @@ static void process_GNSS_data( char * a_from, size_t a_size ) {
       g_gnss_ok = (2 == v_parts);
       // 
       if ( g_gnss_ok ) {
-        // check last sync time
+        // проверим не пора ли обновить локальную дату/время
         if ( (g_time - g_last_sync_time) > CLOCK_SYNC_INTERVAL ) {
-          g_time = timegm( &v_tm ) + g_time_zone;
+          g_time = timegm( &v_tm );
+          if ( g_rtc_initialized ) {
+            rtc_set_cnt( g_time );
+          }
           g_last_sync_time = g_time;
         }
       } else {

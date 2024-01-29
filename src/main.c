@@ -1,6 +1,7 @@
 #include "display.h"
 #include "gnss.h"
 #include "render.h"
+#include "rtc.h"
 
 #include "n200_func.h"
 #include "gd32vf103.h"
@@ -48,12 +49,13 @@ void main() {
   GPIO_CTL1(GPIOB) = (GPIO_CTL1(GPIOB) & ~(GPIO_MODE_MASK1(9) | GPIO_MODE_MASK1(8) | GPIO_MODE_MASK1(13) | GPIO_MODE_MASK1(14) | GPIO_MODE_MASK1(15)))
                    | GPIO_MODE_SET1(9, 0x0F & (GPIO_MODE_AF_OD | GPIO_OSPEED_2MHZ))
                    | GPIO_MODE_SET1(8, 0x0F & (GPIO_MODE_AF_OD | GPIO_OSPEED_2MHZ))
-                   | GPIO_MODE_SET1(15, 0x0F & GPIO_MODE_IN_FLOATING)
-                   | GPIO_MODE_SET1(14, 0x0F & GPIO_MODE_IN_FLOATING)
+                   | GPIO_MODE_SET1(15, 0x0F & GPIO_MODE_IPU)
+                   | GPIO_MODE_SET1(14, 0x0F & GPIO_MODE_IPU)
                    | GPIO_MODE_SET1(13, 0x0F & GPIO_MODE_IPU)
                    ;
   // set pullups
   GPIO_BOP(GPIOB) = GPIO_BOP_BOP13 | GPIO_BOP_BOP14 | GPIO_BOP_BOP15;
+  /*
   // init EXTI14 interrupt (PB14 for GNSS PPS)
   // connect PB14 as interrupt source
   AFIO_EXTISS3 = GPIO_PORT_SOURCE_GPIOB << 8;
@@ -63,9 +65,11 @@ void main() {
   EXTI_PD = EXTI_PD_PD14;
   // enable EXTI14 interrupt
   EXTI_INTEN = EXTI_INTEN_INTEN14;
+  */
   // init display
   display_init_dma();
   //
+  init_RTC();
   init_GNSS();
   init_RENDER();
   // test display
@@ -77,7 +81,6 @@ void main() {
   uint32_t v_ts = g_milliseconds;
   // loop
   for (;;) {
-    //
     uint32_t v_diff = (uint32_t)(g_milliseconds - v_ts);
     if ( v_diff > 1000u ) {
       ++g_time;

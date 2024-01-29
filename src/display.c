@@ -74,7 +74,6 @@ const uint8_t g_ili9341_init[] = {
 };
 
 
-extern volatile uint32_t g_milliseconds;
 void delay_ms( uint32_t a_ms );
 
 

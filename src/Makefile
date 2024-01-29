@@ -19,6 +19,7 @@ a.elf: libbaremetal/lib/libc.a libbaremetal/lib/libm.a
           init.c \
           gnss.c \
           render.c \
+          rtc.c \
           main.c \
           -Os -s -flto -march=rv32imac_zicsr -mabi=ilp32 -ffunction-sections -fdata-sections \
           -nostartfiles -ffreestanding -nostdlib -nodefaultlibs \
