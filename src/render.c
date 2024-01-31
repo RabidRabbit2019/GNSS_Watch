@@ -2,7 +2,7 @@
 #include "gnss.h"
 #include "display.h"
 #include "rtc.h"
-#include <font_22_24.h>
+#include <font_24_26.h>
 #include <font_110_110.h>
 #include <gnss_ok.h>
 #include <gnss_no.h>
@@ -131,15 +131,15 @@ static void render_clock() {
       0
     , v_y
     , DISPLAY_WIDTH
-    , font_22_24_font.m_row_height
+    , font_24_26_font.m_row_height
     , v_str
-    , &font_22_24_font
+    , &font_24_26_font
     , DISPLAY_COLOR_YELLOW
     , DISPLAY_COLOR_DARKGREY
     , DISPLAY_COLOR_DARKGREY
     , 0
     );
-  v_y += font_22_24_font.m_row_height;
+  v_y += font_24_26_font.m_row_height;
   // значок доступности времени от GNSS
   if ( g_gnss_ok ) {
     display_draw_zic_image( 0, v_y, Ignss_ok_tga_width, Ignss_ok_tga_height, Ignss_ok_tga_zic, sizeof(Ignss_ok_tga_zic) );

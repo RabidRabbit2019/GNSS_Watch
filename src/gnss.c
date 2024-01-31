@@ -4,7 +4,6 @@
 
 #include "n200_func.h"
 #include "gd32vf103.h"
-#include <font_22_24.h>
 
 #include <stddef.h>
 #include <string.h>
@@ -26,7 +25,7 @@ size_t strlen(const char *s);
 
 
 // current unix time
-time_t g_time = 1700000000;
+time_t g_time = UTS_2024_01_01_00_00_00;
 // last time sync
 static time_t g_last_sync_time = 0;
 // signal ok
