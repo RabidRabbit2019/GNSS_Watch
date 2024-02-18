@@ -2,6 +2,7 @@
 #include "gnss.h"
 #include "display.h"
 #include "rtc.h"
+#include "bme280.h"
 #include <font_24_26.h>
 #include <font_110_110.h>
 #include <gnss_ok.h>
@@ -68,9 +69,10 @@ static const char * g_month_names[3][12] = {
 
 
 static const uint16_t g_bgcolors[] = {
-  DISPLAY_COLOR_DARKRED
-, DISPLAY_COLOR_DARKGREEN
+  DISPLAY_COLOR_DARKGREEN
+, DISPLAY_COLOR_DARKCYAN
 , DISPLAY_COLOR_DARKBLUE
+, DISPLAY_COLOR_DARKCYAN
 };
 
 // render screen mode
@@ -79,7 +81,7 @@ static int g_rended_mode_last = RENDER_MODE_CLOCK;
 static int g_bgcolor_index = 0;
 static int g_last_tm_min = 0;
 static int g_lang_index = 0;
-static uint32_t g_bgcolors_current = DISPLAY_COLOR_DARKRED | (DISPLAY_COLOR_DARKGREEN << 16);
+static uint32_t g_bgcolors_current = DISPLAY_COLOR_DARKCYAN | (DISPLAY_COLOR_DARKGREEN << 16);
 
 
 static uint32_t get_bg_colors() {
@@ -135,8 +137,8 @@ static void render_clock() {
     , v_str
     , &font_24_26_font
     , DISPLAY_COLOR_YELLOW
-    , DISPLAY_COLOR_DARKGREY
-    , DISPLAY_COLOR_DARKGREY
+    , DISPLAY_COLOR_DARKGRAY
+    , DISPLAY_COLOR_DARKGRAY
     , 0
     );
   v_y += font_24_26_font.m_row_height;
@@ -153,6 +155,8 @@ static void render_clock() {
   v_y += Ialarm_clock_tga_height;
   // значок настроек
   display_draw_zic_image( 0, v_y, Isettings_tga_width, Isettings_tga_height, Isettings_tga_zic, sizeof(Isettings_tga_zic) );
+  // отладка - вывод состояние BME280
+  display_write_string( 48, 200, BMP280_detected() ? "вме280 работает" : "вме280 ошибка", &font_24_26_font, DISPLAY_COLOR_CYAN, DISPLAY_COLOR_DARKBLUE );
 }
 
 

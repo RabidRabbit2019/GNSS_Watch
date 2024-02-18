@@ -22,7 +22,8 @@ lib/libc.a: src/libc/dummy_libc.o \
             src/libc/timegm.o \
             src/libc/strcspn.o \
             src/libc/strsep.o \
-            src/libc/memcpy.o
+            src/libc/memcpy.o \
+            src/libc/picojpeg.o
 	$(TOOLS)riscv64-unknown-elf-ar cr lib/libc.a \
 	          src/libc/dummy_libc.o \
 	          src/libc/gmtime_r.o \
@@ -44,7 +45,8 @@ lib/libc.a: src/libc/dummy_libc.o \
 	          src/libc/timegm.o \
 	          src/libc/strcspn.o \
 	          src/libc/strsep.o \
-	          src/libc/memcpy.o
+	          src/libc/memcpy.o \
+	          src/libc/picojpeg.o
 	$(TOOLS)riscv64-unknown-elf-ranlib lib/libc.a
 
 src/libc/dummy_libc.o: src/libc/dummy_libc.c
@@ -110,6 +112,9 @@ src/libc/strsep.o: src/libc/strsep.c
 src/libc/memcpy.o: src/libc/memcpy.c
 	$(TOOLS)riscv64-unknown-elf-gcc src/libc/memcpy.c -I./include -Os -s --freestanding -march=rv32imac_zicsr -mabi=ilp32 -c -o src/libc/memcpy.o
 
+src/libc/picojpeg.o: src/libc/picojpeg.c
+	$(TOOLS)riscv64-unknown-elf-gcc src/libc/picojpeg.c -I./include -O2 -s --freestanding -march=rv32imac_zicsr -mabi=ilp32 -c -o src/libc/picojpeg.o
+
 
 lib/libm.a: src/libm/dummy_libm.o
 	$(TOOLS)riscv64-unknown-elf-ar cr lib/libm.a src/libm/dummy_libm.o
@@ -143,4 +148,5 @@ clean:
 	src/libc/timegm.o \
 	src/libc/strcspn.o \
 	src/libc/strsep.o \
-	src/libc/memcpy.o
+	src/libc/memcpy.o \
+	src/libc/picojpeg.o

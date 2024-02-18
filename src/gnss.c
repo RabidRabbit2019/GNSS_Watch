@@ -187,7 +187,7 @@ void time_slice_GNSS() {
 __attribute__ ((interrupt))
 void DMA0_Channel4_IRQHandler(void) {
   uint32_t v_dma_status = DMA_INTF(DMA0);
-  
+  // прерывания от DMA по трём флагам HTF, FTF и ERR
   if ( 0 != (DMA_FLAG_ADD(DMA_FLAG_ERR, DMA_CH4) & v_dma_status) ) {
     // error
     // disable channel

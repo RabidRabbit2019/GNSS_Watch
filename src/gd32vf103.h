@@ -68,6 +68,9 @@ OF SUCH DAMAGE.
 #endif
 
 extern uint32_t SystemCoreClock;
+extern uint32_t SystemAHBClock;
+extern uint32_t SystemAPB1Clock;
+extern uint32_t SystemAPB2Clock;
 extern volatile uint32_t g_milliseconds;
 
 /* define value of high speed crystal oscillator (HXTAL) in Hz */

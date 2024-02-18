@@ -2,6 +2,7 @@
 #include "gnss.h"
 #include "render.h"
 #include "rtc.h"
+#include "bme280.h"
 
 #include "n200_func.h"
 #include "gd32vf103.h"
@@ -16,7 +17,7 @@ void delay_ms( uint32_t a_ms );
 
 void main() {
   
-  // enable clocks for PIOA, PIOB, PIOC, AF, SPI0, USART0
+  // включаем тактирование для PIOA, PIOB, PIOC, AF, SPI0, USART0
   RCU_APB2EN |= ( RCU_APB2EN_PCEN
                 | RCU_APB2EN_PBEN
                 | RCU_APB2EN_PAEN
@@ -24,8 +25,9 @@ void main() {
                 | RCU_APB2EN_SPI0EN
                 | RCU_APB2EN_USART0EN
                 );
-  // enable clock for DMA0
+  // включаем тактирование DMA0
   RCU_AHBEN |= RCU_AHBEN_DMA0EN;
+  // управление RGB-светодиодом
   // PC13 Push-Pull 2MHz output
   GPIO_CTL1(GPIOC) = (GPIO_CTL1(GPIOC) & ~GPIO_MODE_MASK1(13))
                    | GPIO_MODE_SET1(13, 0x0F & (GPIO_MODE_OUT_PP | GPIO_OSPEED_2MHZ))
@@ -35,17 +37,17 @@ void main() {
                    | GPIO_MODE_SET0(1, 0x0F & (GPIO_MODE_OUT_PP | GPIO_OSPEED_2MHZ))
                    | GPIO_MODE_SET0(2, 0x0F & (GPIO_MODE_OUT_PP | GPIO_OSPEED_2MHZ))
                    ;
-  // RGB LED off
-  // set 1 for PC13 (R led OFF)
+  // RGB-светодиод выключаем
+  // 1 на PC13 (красный выключен)
   GPIO_BOP(GPIOC) |= GPIO_BOP_BOP13;
-  // set 1 for PA1, PA2 (G and B leds OFF)
+  // 1 на PA1, PA2 (зелёный и синий выключены)
   GPIO_BOP(GPIOA) |= (GPIO_BOP_BOP1 | GPIO_BOP_BOP2);
   
-  // remap I2C0 (PB9 - SDA, PB8 - SCL)
+  // переносим функции I2C0 (PB9 - SDA, PB8 - SCL)
   AFIO_PCF0 |= AFIO_PCF0_I2C0_REMAP;
-  // configure I2C pins and inputs for buttons
-  // PB8 and PB9 - output open-drain 2MHz alternate fn
-  // PB13..PB15 - input with pullups
+  // настройка I2C выводов и входов под кнопки
+  // PB8 и PB9 - выходы open-drain 2MHz alternate fn
+  // PB13..PB15 - входы с подтяжкой к питанию
   GPIO_CTL1(GPIOB) = (GPIO_CTL1(GPIOB) & ~(GPIO_MODE_MASK1(9) | GPIO_MODE_MASK1(8) | GPIO_MODE_MASK1(13) | GPIO_MODE_MASK1(14) | GPIO_MODE_MASK1(15)))
                    | GPIO_MODE_SET1(9, 0x0F & (GPIO_MODE_AF_OD | GPIO_OSPEED_2MHZ))
                    | GPIO_MODE_SET1(8, 0x0F & (GPIO_MODE_AF_OD | GPIO_OSPEED_2MHZ))
@@ -53,7 +55,7 @@ void main() {
                    | GPIO_MODE_SET1(14, 0x0F & GPIO_MODE_IPU)
                    | GPIO_MODE_SET1(13, 0x0F & GPIO_MODE_IPU)
                    ;
-  // set pullups
+  // включаем подтяжку к питанию для входов кнопок
   GPIO_BOP(GPIOB) = GPIO_BOP_BOP13 | GPIO_BOP_BOP14 | GPIO_BOP_BOP15;
   /*
   // init EXTI14 interrupt (PB14 for GNSS PPS)
@@ -66,9 +68,10 @@ void main() {
   // enable EXTI14 interrupt
   EXTI_INTEN = EXTI_INTEN_INTEN14;
   */
-  // init display
+  // настройка экрана
   display_init_dma();
   //
+  init_BMP280();
   init_RTC();
   init_GNSS();
   init_RENDER();

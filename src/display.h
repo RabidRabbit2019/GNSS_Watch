@@ -10,31 +10,30 @@
 #define DISPLAY_WIDTH             320
 #define DISPLAY_HEIGHT            240
 #define DISPLAY_MAX_LINE_PIXELS   DISPLAY_WIDTH
-// use for display time: 5 symbols  "10:23"
+// максимальная длина выводимой на экран строки в символах
 #define MAX_ONE_STR_SYMBOLS       24
 
+#define RGB565(r,g,b) (((r&0xF8)<<8)|((g&0xFC)<<3)|(b>>3))
 
-// Color definitions
-#define DISPLAY_COLOR_BLACK       0x0000
-#define DISPLAY_COLOR_RED         0xF800
-#define DISPLAY_COLOR_GREEN       0x07E0
-#define DISPLAY_COLOR_BLUE        0x001F
-#define DISPLAY_COLOR_CYAN        0x07FF
-#define DISPLAY_COLOR_MAGENTA     0xF81F
-#define DISPLAY_COLOR_YELLOW      0xFFE0
-#define DISPLAY_COLOR_WHITE       0xFFFF
-#define DISPLAY_COLOR_PURPLE      0x780F
-#define DISPLAY_COLOR_OLIVE       0x7BE0
-#define DISPLAY_COLOR_LIGHTGREY   0xC618
-#define DISPLAY_COLOR_CYBLUE      0x03FF
-#define DISPLAY_COLOR_ORANGE      0xFD20
-#define DISPLAY_COLOR_GREENYELLOW 0xAFE5
-#define DISPLAY_COLOR_PINK        0xF81F
-#define DISPLAY_COLOR_DARKGREEN   0x02E0
-#define DISPLAY_COLOR_DARKCYAN    0x03EF
-#define DISPLAY_COLOR_DARKGREY    0x39E7
-#define DISPLAY_COLOR_DARKBLUE    0x000F
-#define DISPLAY_COLOR_DARKRED     0x7800
+// Color definitions                       R    G    B
+#define DISPLAY_COLOR_BLACK       RGB565(  0,   0,   0)
+#define DISPLAY_COLOR_RED         RGB565(255,   0,   0)
+#define DISPLAY_COLOR_GREEN       RGB565(  0, 255,   0)
+#define DISPLAY_COLOR_BLUE        RGB565(  0,   0, 255)
+#define DISPLAY_COLOR_CYAN        RGB565(  0, 255, 255)
+#define DISPLAY_COLOR_MAGENTA     RGB565(255,   0, 255)
+#define DISPLAY_COLOR_YELLOW      RGB565(255, 255,   0)
+#define DISPLAY_COLOR_WHITE       RGB565(255, 255, 255)
+#define DISPLAY_COLOR_GRAY        RGB565(127, 127, 127)
+#define DISPLAY_COLOR_LIGHTGREY   RGB565(191, 191, 191)
+#define DISPLAY_COLOR_PINK        RGB565(255, 191, 191)
+#define DISPLAY_COLOR_DARKRED     RGB565(127,   0,   0)
+#define DISPLAY_COLOR_DARKGREEN   RGB565(  0, 127,   0)
+#define DISPLAY_COLOR_DARKBLUE    RGB565(  0,   0, 127)
+#define DISPLAY_COLOR_DARKCYAN    RGB565(  0, 127, 127)
+#define DISPLAY_COLOR_DARKMAGENTA RGB565(127,   0, 127)
+#define DISPLAY_COLOR_DARKYELLOW  RGB565(127, 127,   0)
+#define DISPLAY_COLOR_DARKGRAY    RGB565( 63,  63,  63)
 
 
 

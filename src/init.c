@@ -29,6 +29,9 @@ const uint32_t g_predv0_divs[16] = {
 
 
 uint32_t SystemCoreClock = HXTAL_VALUE;
+uint32_t SystemAHBClock = HXTAL_VALUE;
+uint32_t SystemAPB1Clock = HXTAL_VALUE / 2;
+uint32_t SystemAPB2Clock = HXTAL_VALUE;
 volatile uint32_t g_milliseconds = 0u;
 volatile int g_exti0_flag = 0;
 
@@ -80,6 +83,9 @@ void startup_code(void) {
     v_mul = 2;
   } else {
     SystemCoreClock = CK_SYS_VALUE;
+    SystemAHBClock = CK_SYS_VALUE;
+    SystemAPB1Clock = CK_SYS_VALUE / 2;
+    SystemAPB2Clock = CK_SYS_VALUE;
   }
   // setup PLL source and multiplier, assume than RCU_CFG0 == 0 after reset
   RCU_CFG0 |= (RCU_PLLSRC_HXTAL | g_pll_mults[v_mul - 2u]);

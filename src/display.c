@@ -3,6 +3,7 @@
 #include "n200_func.h"
 #include "gd32vf103.h"
 #include <zic_utils.h>
+#include <picojpeg.h>
 
 
 #define ILI9341_RESET           0x01
@@ -534,4 +535,8 @@ void diplay_write_string_with_background(
     display_spi_write_end();
 
     display_deselect();
+}
+
+
+void display_draw_jpeg_image( int x, int y, const uint8_t * a_data, int a_data_len ) {
 }
