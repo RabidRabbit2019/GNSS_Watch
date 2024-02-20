@@ -5,6 +5,9 @@
 #include <zic_utils.h>
 #include <picojpeg.h>
 
+#include <string.h>
+#include <stdlib.h>
+
 
 #define ILI9341_RESET           0x01
 #define ILI9341_SLEEP_OUT       0x11
@@ -538,5 +541,255 @@ void diplay_write_string_with_background(
 }
 
 
+static uint8_t cb_read_jpeg( uint8_t * a_buf, uint8_t a_buf_size, uint8_t * a_pbytes_read, void * a_pcb_data )
+{
+  pjpeg_need_bytes_callback_state_t * v_pst = (pjpeg_need_bytes_callback_state_t *)a_pcb_data;
+  int n = min( v_pst->m_nInSize - v_pst->m_nInOfs, (int)a_buf_size );
+   
+  if ( 0 != n ) {
+    memcpy( a_buf, v_pst->m_data + v_pst->m_nInOfs, n );
+  }
+  *a_pbytes_read = (uint8_t)n;
+  v_pst->m_nInOfs += n;
+  return 0;
+}
+
+
+static void draw_jpeg_grayscale( int x, int y, pjpeg_image_info_t * a_image_info ) {
+  uint16_t v_draw_buffer[8*8]; // 8x8
+  int v_x = 0;
+  int v_y = 0;
+  // декодируем блоки последовательно
+  for ( int v_status = pjpeg_decode_mcu(); 0 == v_status; v_status = pjpeg_decode_mcu() ) {
+    uint16_t * v_dst = v_draw_buffer;
+    // каждый блок это просто 256 градаций яркости, 8х8
+    int v_y_lim = min( min( 8, DISPLAY_HEIGHT - y - v_y ), a_image_info->m_height - v_y );
+    if ( v_y_lim <= 0 ) {
+      break;
+    }
+    int v_x_lim = min( min( 8, DISPLAY_WIDTH - x - v_x ), a_image_info->m_width - v_x );
+    if ( v_x_lim > 0 ) {
+      uint8_t * v_src = a_image_info->m_pMCUBufR;
+      for ( int iy = 0; iy < v_y_lim; ++iy ) {
+        for ( int ix = 0; ix < v_x_lim; ++ix ) {
+          uint16_t c = v_src[ix];
+          c = RGB565(c, c, c);
+          c = (c >> 8) | ((c & 0xFF) << 8);
+          *v_dst++ = c;
+        }
+        v_src += 8;
+      }
+      display_set_addr_window_dma( (uint16_t)(x + v_x), (uint16_t)(y + v_y), (uint16_t)v_x_lim, (uint16_t)v_y_lim );
+      display_write_data_dma( (uint8_t *)v_draw_buffer, v_x_lim * v_y_lim * sizeof(uint16_t) );
+    }
+    v_x += 8;
+    if ( v_x >= a_image_info->m_width ) {
+      v_x = 0;
+      v_y += 8;
+    }
+  }
+}
+
+
+// не проверялось
+static void draw_jpeg_yh1v1( int x, int y, pjpeg_image_info_t * a_image_info ) {
+  uint16_t v_draw_buffer[8*8]; // 8x8
+  int v_x = 0;
+  int v_y = 0;
+  // декодируем блоки последовательно
+  for ( int v_status = pjpeg_decode_mcu(); 0 == v_status; v_status = pjpeg_decode_mcu() ) {
+    uint16_t * v_dst = v_draw_buffer;
+    // каждый блок это три интенсивности цвета RGB, 8х8
+    int v_y_lim = min( min( 8, DISPLAY_HEIGHT - y - v_y ), a_image_info->m_height - v_y );
+    if ( v_y_lim <= 0 ) {
+      break;
+    }
+    int v_x_lim = min( min( 8, DISPLAY_WIDTH - x - v_x ), a_image_info->m_width - v_x );
+    if ( v_x_lim > 0 ) {
+      uint8_t * v_srcR = a_image_info->m_pMCUBufR;
+      uint8_t * v_srcG = a_image_info->m_pMCUBufG;
+      uint8_t * v_srcB = a_image_info->m_pMCUBufB;
+      for ( int iy = 0; iy < v_y_lim; ++iy ) {
+        for ( int ix = 0; ix < v_x_lim; ++ix ) {
+          uint16_t c = RGB565(v_srcR[ix], v_srcG[ix], v_srcB[ix]);
+          c = (c >> 8) | ((c & 0xFF) << 8);
+          *v_dst++ = c;
+        }
+        v_srcR += 8;
+        v_srcG += 8;
+        v_srcB += 8;
+      }
+      display_set_addr_window_dma( (uint16_t)(x + v_x), (uint16_t)(y + v_y), (uint16_t)v_x_lim, (uint16_t)v_y_lim );
+      display_write_data_dma( (uint8_t *)v_draw_buffer, v_x_lim * v_y_lim * sizeof(uint16_t) );
+    }
+    v_x += 8;
+    if ( v_x >= a_image_info->m_width ) {
+      v_x = 0;
+      v_y += 8;
+    }
+  }
+}
+
+
+// не проверялось
+static void draw_jpeg_yh1v2( int x, int y, pjpeg_image_info_t * a_image_info ) {
+  uint16_t v_draw_buffer[8*16]; // 8x16
+  int v_x = 0;
+  int v_y = 0;
+  // декодируем блоки последовательно
+  for ( int v_status = pjpeg_decode_mcu(); 0 == v_status; v_status = pjpeg_decode_mcu() ) {
+    uint16_t * v_dst = v_draw_buffer;
+    // каждый блок два набора RGB 8х8, со смещением 0 и 128
+    int v_y_lim = min( min( 16, DISPLAY_HEIGHT - y - v_y ), a_image_info->m_height - v_y );
+    if ( v_y_lim <= 0 ) {
+      break;
+    }
+    int v_x_lim = min( min( 8, DISPLAY_WIDTH - x - v_x ), a_image_info->m_width - v_x );
+    if ( v_x_lim > 0 ) {
+      uint8_t * v_srcR = a_image_info->m_pMCUBufR;
+      uint8_t * v_srcG = a_image_info->m_pMCUBufG;
+      uint8_t * v_srcB = a_image_info->m_pMCUBufB;
+      for ( int iy = 0; iy < v_y_lim; ++iy ) {
+        int v_y_off = (iy < 8) ? 0 : 64;
+        for ( int ix = 0; ix < v_x_lim; ++ix ) {
+          uint16_t c = RGB565(v_srcR[ix + v_y_off], v_srcG[ix + v_y_off], v_srcB[ix + v_y_off]);
+          c = (c >> 8) | ((c & 0xFF) << 8);
+          *v_dst++ = c;
+        }
+        v_srcR += 8;
+        v_srcG += 8;
+        v_srcB += 8;
+      }
+      display_set_addr_window_dma( (uint16_t)(x + v_x), (uint16_t)(y + v_y), (uint16_t)v_x_lim, (uint16_t)v_y_lim );
+      display_write_data_dma( (uint8_t *)v_draw_buffer, v_x_lim * v_y_lim * sizeof(uint16_t) );
+    }
+    v_x += 8;
+    if ( v_x >= a_image_info->m_width ) {
+      v_x = 0;
+      v_y += 16;
+    }
+  }
+}
+
+
+// не проверялось
+static void draw_jpeg_yh2v1( int x, int y, pjpeg_image_info_t * a_image_info ) {
+  uint16_t v_draw_buffer[16*8]; // 16x8
+  int v_x = 0;
+  int v_y = 0;
+  // декодируем блоки последовательно
+  for ( int v_status = pjpeg_decode_mcu(); 0 == v_status; v_status = pjpeg_decode_mcu() ) {
+    uint16_t * v_dst = v_draw_buffer;
+    // каждый блок два набора RGB 8х8, со смещением 0 и 64
+    int v_y_lim = min( min( 8, DISPLAY_HEIGHT - y - v_y ), a_image_info->m_height - v_y );
+    if ( v_y_lim <= 0 ) {
+      break;
+    }
+    int v_x_lim = min( min( 16, DISPLAY_WIDTH - x - v_x ), a_image_info->m_width - v_x );
+    if ( v_x_lim > 0 ) {
+      uint8_t * v_srcR = a_image_info->m_pMCUBufR;
+      uint8_t * v_srcG = a_image_info->m_pMCUBufG;
+      uint8_t * v_srcB = a_image_info->m_pMCUBufB;
+      for ( int iy = 0; iy < v_y_lim; ++iy ) {
+        for ( int ix = 0; ix < v_x_lim; ++ix ) {
+          int v_off = (ix < 8) ? 0 : 56;
+          uint16_t c = RGB565(v_srcR[ix + v_off], v_srcG[ix + v_off], v_srcB[ix + v_off]);
+          c = (c >> 8) | ((c & 0xFF) << 8);
+          *v_dst++ = c;
+        }
+        v_srcR += 8;
+        v_srcG += 8;
+        v_srcB += 8;
+      }
+      display_set_addr_window_dma( (uint16_t)(x + v_x), (uint16_t)(y + v_y), (uint16_t)v_x_lim, (uint16_t)v_y_lim );
+      display_write_data_dma( (uint8_t *)v_draw_buffer, v_x_lim * v_y_lim * sizeof(uint16_t) );
+    }
+    v_x += 16;
+    if ( v_x >= a_image_info->m_width ) {
+      v_x = 0;
+      v_y += 8;
+    }
+  }
+}
+
+
+static void draw_jpeg_yh2v2( int x, int y, pjpeg_image_info_t * a_image_info ) {
+  uint16_t v_draw_buffer[16*16]; // 16x16
+  int v_x = 0;
+  int v_y = 0;
+  // декодируем блоки последовательно
+  for ( int v_status = pjpeg_decode_mcu(); 0 == v_status; v_status = pjpeg_decode_mcu() ) {
+    uint16_t * v_dst = v_draw_buffer;
+    // каждый блок четыре набора RGB 8х8, со смещением 0, 64, 128, 192
+    int v_y_lim = min( min( 16, DISPLAY_HEIGHT - y - v_y ), a_image_info->m_height - v_y );
+    if ( v_y_lim <= 0 ) {
+      break;
+    }
+    int v_x_lim = min( min( 16, DISPLAY_WIDTH - x - v_x ), a_image_info->m_width - v_x );
+    if ( v_x_lim > 0 ) {
+      uint8_t * v_srcR = a_image_info->m_pMCUBufR;
+      uint8_t * v_srcG = a_image_info->m_pMCUBufG;
+      uint8_t * v_srcB = a_image_info->m_pMCUBufB;
+      for ( int iy = 0; iy < v_y_lim; ++iy ) {
+        int v_y_off = (iy < 8) ? 0 : 64;
+        for ( int ix = 0; ix < v_x_lim; ++ix ) {
+          int v_off = ((ix < 8) ? 0 : 56) + v_y_off;
+          uint16_t c = RGB565(v_srcR[ix + v_off], v_srcG[ix + v_off], v_srcB[ix + v_off]);
+          c = (c >> 8) | ((c & 0xFF) << 8);
+          *v_dst++ = c;
+        }
+        v_srcR += 8;
+        v_srcG += 8;
+        v_srcB += 8;
+      }
+      display_set_addr_window_dma( (uint16_t)(x + v_x), (uint16_t)(y + v_y), (uint16_t)v_x_lim, (uint16_t)v_y_lim );
+      display_write_data_dma( (uint8_t *)v_draw_buffer, v_x_lim * v_y_lim * sizeof(uint16_t) );
+    }
+    v_x += 16;
+    if ( v_x >= a_image_info->m_width ) {
+      v_x = 0;
+      v_y += 16;
+    }
+  }
+}
+
+
 void display_draw_jpeg_image( int x, int y, const uint8_t * a_data, int a_data_len ) {
+  pjpeg_need_bytes_callback_state_t v_callback_state;
+  pjpeg_image_info_t v_image_info;
+  
+  // данные для подгрузки файла
+  v_callback_state.m_data = a_data;
+  v_callback_state.m_nInOfs = 0;
+  v_callback_state.m_nInSize = a_data_len;
+  // инициализация декодера
+  uint8_t v_status = pjpeg_decode_init( &v_image_info, cb_read_jpeg, &v_callback_state, 0 );
+  //
+  if ( 0 != v_status ) {
+    // что-то пошло не так
+    return;
+  }
+  display_select();
+  switch ( v_image_info.m_scanType ) {
+    case PJPG_GRAYSCALE:
+      draw_jpeg_grayscale( x, y, &v_image_info );
+      break;
+      
+    case PJPG_YH1V1:
+      draw_jpeg_yh1v1( x, y, &v_image_info );
+      break;
+      
+    case PJPG_YH1V2:
+      draw_jpeg_yh1v2( x, y, &v_image_info );
+      break;
+      
+    case PJPG_YH2V1:
+      draw_jpeg_yh2v1( x, y, &v_image_info );
+      break;
+      
+    case PJPG_YH2V2:
+      draw_jpeg_yh2v2( x, y, &v_image_info );
+      break;
+  }
+  display_deselect();
 }

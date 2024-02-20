@@ -109,6 +109,14 @@ typedef struct
    unsigned char *m_pMCUBufB;
 } pjpeg_image_info_t;
 
+// state of loader
+typedef struct {
+  const unsigned char * m_data;
+  int m_nInSize;
+  int m_nInOfs;
+} pjpeg_need_bytes_callback_state_t;
+
+
 typedef unsigned char (*pjpeg_need_bytes_callback_t)(unsigned char* pBuf, unsigned char buf_size, unsigned char *pBytes_actually_read, void *pCallback_data);
 
 // Initializes the decompressor. Returns 0 on success, or one of the above error codes on failure.

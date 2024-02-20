@@ -6,7 +6,7 @@
 
 #include "n200_func.h"
 #include "gd32vf103.h"
-#include <flag_320_240.h>
+#include <flag2x2.h>
 #include <time.h>
 #include <string.h>
 #include <stdio.h>
@@ -76,8 +76,8 @@ void main() {
   init_GNSS();
   init_RENDER();
   // test display
-  //display_draw_zic_image( 0, 0, Iflag_320_240_tga_width, Iflag_320_240_tga_height, Iflag_320_240_tga_zic, sizeof(Iflag_320_240_tga_zic) );
-  //delay_ms( 2000 );
+  display_draw_jpeg_image( 0, 0, flag2x2_jpg, flag2x2_jpg_len );
+  delay_ms( 5000 );
   // clear display with black
   display_fill_rectangle_dma( 0, 0, DISPLAY_WIDTH, DISPLAY_HEIGHT, DISPLAY_COLOR_BLACK );
   //

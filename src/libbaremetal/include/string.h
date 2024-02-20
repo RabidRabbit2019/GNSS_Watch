@@ -1,5 +1,5 @@
-#ifndef	_TIME_H
-#define _TIME_H
+#ifndef	_STRING_H
+#define _STRING_H
 
 #include <stdint.h>
 #include <stddef.h>
@@ -10,6 +10,7 @@ extern "C" {
 #endif
 
 void * memset( void * dest, int c, size_t n );
+void *memcpy(void *restrict dest, const void *restrict src, size_t n);
 void bzero( void * s, size_t n );
 char *strstr(const char *h, const char *n);
 void *memmem(const void *h0, size_t k, const void *n0, size_t l);

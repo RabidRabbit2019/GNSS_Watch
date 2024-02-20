@@ -11,7 +11,7 @@ a.elf: libbaremetal/lib/libc.a libbaremetal/lib/libm.a
           images/zic_utils.c \
           fonts/font_24_26.c \
           fonts/font_110_110.c \
-          images/flag_320_240.c \
+          images/flag2x2.c \
           images/alarm_clock.c \
           images/gnss_no.c \
           images/gnss_ok.c \

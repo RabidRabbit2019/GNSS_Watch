@@ -18,12 +18,6 @@
 #define RX_STATUS_RESTART   3
 
 
-void bzero( void * s, size_t n );
-char *strstr(const char *h, const char *n);
-char *strsep(char **str, const char *sep);
-size_t strlen(const char *s);
-
-
 // current unix time
 time_t g_time = UTS_2024_01_01_00_00_00;
 // last time sync
