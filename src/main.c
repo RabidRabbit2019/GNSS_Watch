@@ -3,10 +3,10 @@
 #include "render.h"
 #include "rtc.h"
 #include "bme280.h"
-
 #include "n200_func.h"
 #include "gd32vf103.h"
 #include <flag2x2.h>
+
 #include <time.h>
 #include <string.h>
 #include <stdio.h>
