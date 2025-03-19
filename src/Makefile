@@ -1,4 +1,4 @@
-TOOLS=/home/vzaytsev/tools/riscv-gcc/bin/
+TOOLS=
 
 all: a.elf
 
@@ -22,13 +22,15 @@ a.elf: libbaremetal/lib/libc.a libbaremetal/lib/libm.a
           rtc.c \
           bme280.c \
           main.c \
-          -Os -s -flto -march=rv32imac_zicsr -mabi=ilp32 -ffunction-sections -fdata-sections \
+          -Os -g -march=rv32imac_zicsr -mabi=ilp32 -ffunction-sections -fdata-sections \
+          -fstrict-volatile-bitfields -fno-strict-aliasing -fno-common -fno-builtin-printf \
           -nostartfiles -ffreestanding -nostdlib -nodefaultlibs \
           -I./libbaremetal/include \
           -I./images \
           -I./fonts \
           -L./libbaremetal/lib -Wl,-gc-sections -Wl,-TGD32VF103C8Tx_FLASH.ld \
-          -o a.elf
+          -L/usr/lib/gcc/riscv64-unknown-elf/12.2.0/rv32imac/ilp32 \
+          -o out.elf
 
 libbaremetal/lib/libc.a:
 	$(MAKE) -C ./libbaremetal
@@ -37,5 +39,5 @@ libbaremetal/lib/libm.a:
 	$(MAKE) -C ./libbaremetal
 
 clean:
-	rm -f a.elf
+	rm -f out.elf
 	$(MAKE) -C ./libbaremetal clean

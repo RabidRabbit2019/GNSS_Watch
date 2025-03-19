@@ -14,6 +14,7 @@
 #define MAX_ONE_STR_SYMBOLS       24
 
 #define RGB565(r,g,b) (((r&0xF8)<<8)|((g&0xFC)<<3)|(b>>3))
+#define RGB565FINAL(r,g,b) ((r&0xF8)|((g&0xE0)>>5)|((g&0x1C)<<11)|((b&0xF8)<<5))
 
 // Color definitions                       R    G    B
 #define DISPLAY_COLOR_BLACK       RGB565(  0,   0,   0)

@@ -6,6 +6,7 @@
 #include "n200_func.h"
 #include "gd32vf103.h"
 #include <flag2x2.h>
+#include <font_24_26.h>
 
 #include <time.h>
 #include <string.h>

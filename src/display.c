@@ -719,9 +719,7 @@ static void copy_block_h2v2( pjpeg_image_info_t * a_ii, int a_x_lim, int a_y_lim
     int v_y_off = (iy < 8) ? 0 : 64;
     for ( int ix = 0; ix < a_x_lim; ++ix ) {
       int v_off = ((ix < 8) ? 0 : 56) + v_y_off;
-      uint16_t c = RGB565(v_srcR[ix + v_off], v_srcG[ix + v_off], v_srcB[ix + v_off]);
-      c = (c >> 8) | ((c & 0xFF) << 8);
-      *a_dst++ = c;
+      *a_dst++ = RGB565FINAL(v_srcR[ix + v_off], v_srcG[ix + v_off], v_srcB[ix + v_off]);
     }
     v_srcR += 8;
     v_srcG += 8;
@@ -730,24 +728,23 @@ static void copy_block_h2v2( pjpeg_image_info_t * a_ii, int a_x_lim, int a_y_lim
 }
 
 
+// вывод блоками 16х16 с двойным буфером
 static void draw_jpeg_yh2v2_db( int x, int y, pjpeg_image_info_t * a_image_info ) {
   uint16_t v_draw_buffer1[16*16]; // 16x16
   uint16_t v_draw_buffer2[16*16]; // 16x16
   int v_x = 0;
   int v_y = 0;
-  // проверяем, отобразится ли хоть что-нибудь
-  if ( x >= DISPLAY_WIDTH || y >= DISPLAY_HEIGHT ) {
-    return;
-  }
   // декодируем первый блок
   if ( 0 != pjpeg_decode_mcu() ) {
     return;
   }
-  // первый блок отображаем
+  // первый блок копируем в буфер2
   int v_y_lim = min( min( 16, DISPLAY_HEIGHT - y - v_y ), a_image_info->m_height - v_y );
   int v_x_lim = min( min( 16, DISPLAY_WIDTH - x - v_x ), a_image_info->m_width - v_x );
   copy_block_h2v2( a_image_info, v_x_lim, v_y_lim, v_draw_buffer2 );
+  // окно вывода
   display_set_addr_window_dma( (uint16_t)(x + v_x), (uint16_t)(y + v_y), (uint16_t)v_x_lim, (uint16_t)v_y_lim );
+  // запускаем передачу буфера2 через DMA
   display_spi_write_start( (uint8_t *)v_draw_buffer2, v_x_lim * v_y_lim * sizeof(uint16_t) );
   v_x += 16;
   if ( v_x >= a_image_info->m_width ) {
@@ -759,7 +756,7 @@ static void draw_jpeg_yh2v2_db( int x, int y, pjpeg_image_info_t * a_image_info 
     if ( 0 != pjpeg_decode_mcu() ) {
       break;
     }
-    // первый буфер
+    // очередной блок копируем в буфер1
     v_y_lim = min( min( 16, DISPLAY_HEIGHT - y - v_y ), a_image_info->m_height - v_y );
     if ( v_y_lim <= 0 ) {
       break;
@@ -767,8 +764,11 @@ static void draw_jpeg_yh2v2_db( int x, int y, pjpeg_image_info_t * a_image_info 
     v_x_lim = min( min( 16, DISPLAY_WIDTH - x - v_x ), a_image_info->m_width - v_x );
     if ( v_x_lim > 0 ) {
       copy_block_h2v2( a_image_info, v_x_lim, v_y_lim, v_draw_buffer1 );
+      // ждём окончания передачи из буфера2
       display_spi_write_end();
+      // окно вывода
       display_set_addr_window_dma( (uint16_t)(x + v_x), (uint16_t)(y + v_y), (uint16_t)v_x_lim, (uint16_t)v_y_lim );
+      // запускаем передачу буфера1 через DMA
       display_spi_write_start( (uint8_t *)v_draw_buffer1, v_x_lim * v_y_lim * sizeof(uint16_t) );
     }
     v_x += 16;
@@ -776,10 +776,11 @@ static void draw_jpeg_yh2v2_db( int x, int y, pjpeg_image_info_t * a_image_info 
       v_x = 0;
       v_y += 16;
     }
+    // декодируем следующий блок
     if ( 0 != pjpeg_decode_mcu() ) {
       break;
     }
-    // второй буфер
+    // очередной блок копируем в буфер2
     int v_y_lim = min( min( 16, DISPLAY_HEIGHT - y - v_y ), a_image_info->m_height - v_y );
     if ( v_y_lim <= 0 ) {
       break;
@@ -787,8 +788,11 @@ static void draw_jpeg_yh2v2_db( int x, int y, pjpeg_image_info_t * a_image_info 
     int v_x_lim = min( min( 16, DISPLAY_WIDTH - x - v_x ), a_image_info->m_width - v_x );
     if ( v_x_lim > 0 ) {
       copy_block_h2v2( a_image_info, v_x_lim, v_y_lim, v_draw_buffer2 );
+      // ждём окончания передачи из буфера1
       display_spi_write_end();
+      // окно вывода
       display_set_addr_window_dma( (uint16_t)(x + v_x), (uint16_t)(y + v_y), (uint16_t)v_x_lim, (uint16_t)v_y_lim );
+      // запускаем передачу буфера2 через DMA
       display_spi_write_start( (uint8_t *)v_draw_buffer2, v_x_lim * v_y_lim * sizeof(uint16_t) );
     }
     v_x += 16;
@@ -797,14 +801,20 @@ static void draw_jpeg_yh2v2_db( int x, int y, pjpeg_image_info_t * a_image_info 
       v_y += 16;
     }
   }
+  // ждём окончания передачи
   display_spi_write_end();
 }
 
 
+// вывести на экран изображение, упакованное в формате JPEG
 void display_draw_jpeg_image( int x, int y, const uint8_t * a_data, int a_data_len ) {
   pjpeg_need_bytes_callback_state_t v_callback_state;
   pjpeg_image_info_t v_image_info;
   
+  // проверяем, отобразится ли хоть что-нибудь
+  if ( x >= DISPLAY_WIDTH || y >= DISPLAY_HEIGHT ) {
+    return;
+  }
   // данные для подгрузки файла
   v_callback_state.m_data = a_data;
   v_callback_state.m_nInOfs = 0;

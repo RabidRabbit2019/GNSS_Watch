@@ -1,7 +1,7 @@
 #ifndef _Ignss_h_
 #define _Ignss_h_
 
-#include <inttypes.h>
+#include <stdint.h>
 
 
 #define Ignss_tga_width 32

@@ -1,7 +1,7 @@
 #ifndef _Isettings_h_
 #define _Isettings_h_
 
-#include <inttypes.h>
+#include <stdint.h>
 
 
 #define Isettings_tga_width 36

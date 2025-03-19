@@ -1,7 +1,7 @@
 #ifndef _Ialarm_clock_h_
 #define _Ialarm_clock_h_
 
-#include <inttypes.h>
+#include <stdint.h>
 
 
 #define Ialarm_clock_tga_width 36
