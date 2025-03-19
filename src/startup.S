@@ -166,12 +166,14 @@ Reset_Handler:
   // Disable interrupts until they are needed.
   csrc CSR_MSTATUS, MSTATUS_MIE
   // Move from 0x00000000 to 0x08000000 address space if necessary.
-  la   a0, in_address_space
-  li   a1, 1
-  slli a1, a1, 27
-  bleu a1, a0, in_address_space
-  add  a0, a0, a1
-  jr   a0
+  lui  a0, %hi(in_address_space)
+  jr   %lo(in_address_space)(a0)
+//  la   a0, in_address_space
+//  li   a1, 1
+//  slli a1, a1, 27
+//  bleu a1, a0, in_address_space
+//  add  a0, a0, a1
+//  jr   a0
 in_address_space:
   // Load the initial stack pointer value.
   la   sp, _estack
