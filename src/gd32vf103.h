@@ -2334,6 +2334,7 @@ typedef enum
 #define GPIO_OCTL_OCTL15           BIT(15)                   /*!< pin 15 output bit */
 
 /* GPIO_BOP */
+#define GPIO_BOP_SET(a)            BIT(a)                    /*!< pin set bit */
 #define GPIO_BOP_BOP0              BIT(0)                    /*!< pin 0 set bit */
 #define GPIO_BOP_BOP1              BIT(1)                    /*!< pin 1 set bit */
 #define GPIO_BOP_BOP2              BIT(2)                    /*!< pin 2 set bit */
@@ -2350,6 +2351,7 @@ typedef enum
 #define GPIO_BOP_BOP13             BIT(13)                   /*!< pin 13 set bit */
 #define GPIO_BOP_BOP14             BIT(14)                   /*!< pin 14 set bit */
 #define GPIO_BOP_BOP15             BIT(15)                   /*!< pin 15 set bit */
+#define GPIO_BOP_RST(a)            BIT(16+a)                 /*!< pin clear bit */
 #define GPIO_BOP_CR0               BIT(16)                   /*!< pin 0 clear bit */
 #define GPIO_BOP_CR1               BIT(17)                   /*!< pin 1 clear bit */
 #define GPIO_BOP_CR2               BIT(18)                   /*!< pin 2 clear bit */

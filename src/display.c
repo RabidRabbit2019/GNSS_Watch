@@ -227,22 +227,21 @@ void display_fill_rectangle_dma( uint16_t x, uint16_t y, uint16_t w, uint16_t h,
 
 // initialize display, ILI9341, 320x240, spi four lines, DMA transfers
 void display_init_dma() {
-  // enable SP  // configure LCD pins (PA0 - RST, PA3 - DC, PA4 - CS, PA5 - SCK, PA6 - MISO, PA7 - MOSI, PA8 - backlight on/off)
-  // PA6 - input with pullup, PA5, PA7 - output push-pull 50 MHz alternate fn
+  // enable SP  // configure LCD pins (PA0 - RST, PA3 - DC, PA4 - CS, PA5 - SCK, PA7 - MOSI, PA8 - backlight on/off)
+  // PA5, PA7 - output push-pull 50 MHz alternate fn
   // PA0, PA3, PA4, PA8 - output push-pull 2MHz
   GPIO_CTL0(GPIOA) = (GPIO_CTL0(GPIOA) & ~(GPIO_MODE_MASK0(0) | GPIO_MODE_MASK0(3) | GPIO_MODE_MASK0(4) | GPIO_MODE_MASK0(5) | GPIO_MODE_MASK0(6)  | GPIO_MODE_MASK0(7)))
                    | GPIO_MODE_SET0(0, 0x0F & (GPIO_MODE_OUT_PP | GPIO_OSPEED_10MHZ))
                    | GPIO_MODE_SET0(3, 0x0F & (GPIO_MODE_OUT_PP | GPIO_OSPEED_10MHZ))
                    | GPIO_MODE_SET0(4, 0x0F & (GPIO_MODE_OUT_PP | GPIO_OSPEED_10MHZ))
                    | GPIO_MODE_SET0(5, 0x0F & (GPIO_MODE_AF_PP | GPIO_OSPEED_50MHZ))
-                   | GPIO_MODE_SET0(6, 0x0F & GPIO_MODE_IPU)
                    | GPIO_MODE_SET0(7, 0x0F & (GPIO_MODE_AF_PP | GPIO_OSPEED_50MHZ))
                    ;
   GPIO_CTL1(GPIOA) = (GPIO_CTL1(GPIOA) & ~(GPIO_MODE_MASK1(8)))
                    | GPIO_MODE_SET1(8, 0x0F & (GPIO_MODE_OUT_PP | GPIO_OSPEED_2MHZ))
                    ;
   // set pullups and enable display backlight, display reset passive, deselect display
-  GPIO_BOP(GPIOA) = GPIO_BOP_BOP6 | GPIO_BOP_BOP8 | GPIO_BOP_BOP0 | GPIO_BOP_BOP4;
+  GPIO_BOP(GPIOA) = GPIO_BOP_BOP8 | GPIO_BOP_BOP0 | GPIO_BOP_BOP4;
   // SPI0 clocks enabled in main.c
   // SPI clock = APB2 clock / 4 (64 / 4 = 16 MHz), master mode
   SPI_CTL0(SPI0) = SPI_CTL0_SWNSSEN
