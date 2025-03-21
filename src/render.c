@@ -3,7 +3,7 @@
 #include "display.h"
 #include "rtc.h"
 #include "bme280.h"
-#include <font_24_26.h>
+#include <font_28_32.h>
 #include <font_110_110.h>
 #include <gnss_ok.h>
 #include <gnss_no.h>
@@ -133,30 +133,38 @@ static void render_clock() {
       0
     , v_y
     , DISPLAY_WIDTH
-    , font_24_26_font.m_row_height
+    , font_28_32_font.m_row_height
     , v_str
-    , &font_24_26_font
+    , &font_28_32_font
     , DISPLAY_COLOR_YELLOW
     , DISPLAY_COLOR_DARKGRAY
     , DISPLAY_COLOR_DARKGRAY
     , 0
     );
-  v_y += font_24_26_font.m_row_height;
+  v_y += font_28_32_font.m_row_height;
   // значок доступности времени от GNSS
   if ( g_gnss_ok ) {
     display_draw_zic_image( 0, v_y, Ignss_ok_tga_width, Ignss_ok_tga_height, Ignss_ok_tga_zic, sizeof(Ignss_ok_tga_zic) );
-    v_y += Ignss_ok_tga_height;
   } else {
     display_draw_zic_image( 0, v_y, Ignss_no_tga_width, Ignss_no_tga_height, Ignss_no_tga_zic, sizeof(Ignss_no_tga_zic) );
-    v_y += Ignss_no_tga_height;
   }
   // значок будильника
-  display_draw_zic_image( 0, v_y, Ialarm_clock_tga_width, Ialarm_clock_tga_height, Ialarm_clock_tga_zic, sizeof(Ialarm_clock_tga_zic) );
+  display_draw_zic_image(
+      DISPLAY_WIDTH - Ialarm_clock_tga_width, v_y
+    , Ialarm_clock_tga_width, Ialarm_clock_tga_height
+    , Ialarm_clock_tga_zic
+    , sizeof(Ialarm_clock_tga_zic)
+    );
   v_y += Ialarm_clock_tga_height;
   // значок настроек
-  display_draw_zic_image( 0, v_y, Isettings_tga_width, Isettings_tga_height, Isettings_tga_zic, sizeof(Isettings_tga_zic) );
+  display_draw_zic_image(
+      DISPLAY_WIDTH - Isettings_tga_width, v_y
+    , Isettings_tga_width, Isettings_tga_height
+    , Isettings_tga_zic
+    , sizeof(Isettings_tga_zic)
+    );
   // отладка - вывод состояние BME280
-  display_write_string( 48, 200, BMP280_detected() ? "вме280 работает" : "вме280 ошибка", &font_24_26_font, DISPLAY_COLOR_CYAN, DISPLAY_COLOR_DARKBLUE );
+  display_write_string( 48, 200, BMP280_detected() ? "вме280 работает" : "вме280 ошибка", &font_28_32_font, DISPLAY_COLOR_CYAN, DISPLAY_COLOR_DARKBLUE );
 }
 
 

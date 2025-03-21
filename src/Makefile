@@ -9,7 +9,7 @@ a.elf: libbaremetal/lib/libc.a libbaremetal/lib/libm.a
           display.c \
           fonts/font_bmp.c \
           images/zic_utils.c \
-          fonts/font_24_26.c \
+          fonts/font_28_32.c \
           fonts/font_110_110.c \
           images/flag2x2.c \
           images/alarm_clock.c \

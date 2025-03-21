@@ -91,73 +91,73 @@ exception_table:
   .word  	  eclic_bwei_handler
   .word  	  eclic_pmovi_handler
   .word  	  WWDGT_IRQHandler
-	.word     LVD_IRQHandler
-	.word     TAMPER_IRQHandler
-	.word     RTC_IRQHandler
-	.word     FMC_IRQHandler
-	.word     RCU_IRQHandler
-	.word     EXTI0_IRQHandler
-	.word     EXTI1_IRQHandler
-	.word     EXTI2_IRQHandler
-	.word     EXTI3_IRQHandler
-	.word     EXTI4_IRQHandler
-	.word     DMA0_Channel0_IRQHandler
-	.word     DMA0_Channel1_IRQHandler
-	.word     DMA0_Channel2_IRQHandler
-	.word     DMA0_Channel3_IRQHandler
-	.word     DMA0_Channel4_IRQHandler
-	.word     DMA0_Channel5_IRQHandler
-	.word     DMA0_Channel6_IRQHandler
-	.word     ADC0_1_IRQHandler
-	.word     CAN0_TX_IRQHandler
-	.word     CAN0_RX0_IRQHandler
-	.word     CAN0_RX1_IRQHandler
-	.word     CAN0_EWMC_IRQHandler
-	.word     EXTI5_9_IRQHandler
-	.word     TIMER0_BRK_IRQHandler
-	.word     TIMER0_UP_IRQHandler
-	.word     TIMER0_TRG_CMT_IRQHandler
-	.word     TIMER0_Channel_IRQHandler
-	.word     TIMER1_IRQHandler
-	.word     TIMER2_IRQHandler
-	.word     TIMER3_IRQHandler
-	.word     I2C0_EV_IRQHandler
-	.word     I2C0_ER_IRQHandler
-	.word     I2C1_EV_IRQHandler
-	.word     I2C1_ER_IRQHandler
-	.word     SPI0_IRQHandler
-	.word     SPI1_IRQHandler
-	.word     USART0_IRQHandler
-	.word     USART1_IRQHandler
-	.word     USART2_IRQHandler
-	.word     EXTI10_15_IRQHandler
-	.word     RTC_Alarm_IRQHandler
-	.word     USBFS_WKUP_IRQHandler
+  .word     LVD_IRQHandler
+  .word     TAMPER_IRQHandler
+  .word     RTC_IRQHandler
+  .word     FMC_IRQHandler
+  .word     RCU_IRQHandler
+  .word     EXTI0_IRQHandler
+  .word     EXTI1_IRQHandler
+  .word     EXTI2_IRQHandler
+  .word     EXTI3_IRQHandler
+  .word     EXTI4_IRQHandler
+  .word     DMA0_Channel0_IRQHandler
+  .word     DMA0_Channel1_IRQHandler
+  .word     DMA0_Channel2_IRQHandler
+  .word     DMA0_Channel3_IRQHandler
+  .word     DMA0_Channel4_IRQHandler
+  .word     DMA0_Channel5_IRQHandler
+  .word     DMA0_Channel6_IRQHandler
+  .word     ADC0_1_IRQHandler
+  .word     CAN0_TX_IRQHandler
+  .word     CAN0_RX0_IRQHandler
+  .word     CAN0_RX1_IRQHandler
+  .word     CAN0_EWMC_IRQHandler
+  .word     EXTI5_9_IRQHandler
+  .word     TIMER0_BRK_IRQHandler
+  .word     TIMER0_UP_IRQHandler
+  .word     TIMER0_TRG_CMT_IRQHandler
+  .word     TIMER0_Channel_IRQHandler
+  .word     TIMER1_IRQHandler
+  .word     TIMER2_IRQHandler
+  .word     TIMER3_IRQHandler
+  .word     I2C0_EV_IRQHandler
+  .word     I2C0_ER_IRQHandler
+  .word     I2C1_EV_IRQHandler
+  .word     I2C1_ER_IRQHandler
+  .word     SPI0_IRQHandler
+  .word     SPI1_IRQHandler
+  .word     USART0_IRQHandler
+  .word     USART1_IRQHandler
+  .word     USART2_IRQHandler
+  .word     EXTI10_15_IRQHandler
+  .word     RTC_Alarm_IRQHandler
+  .word     USBFS_WKUP_IRQHandler
   .word     0
   .word     0
   .word     0
   .word     0
-	.word     0
-	.word     EXMC_IRQHandler
-	.word     0
-	.word     TIMER4_IRQHandler
-	.word     SPI2_IRQHandler
-	.word     UART3_IRQHandler
-	.word     UART4_IRQHandler
-	.word     TIMER5_IRQHandler
-	.word     TIMER6_IRQHandler
-	.word     DMA1_Channel0_IRQHandler
-	.word     DMA1_Channel1_IRQHandler
-	.word     DMA1_Channel2_IRQHandler
-	.word     DMA1_Channel3_IRQHandler
-	.word     DMA1_Channel4_IRQHandler
+  .word     0
+  .word     EXMC_IRQHandler
+  .word     0
+  .word     TIMER4_IRQHandler
+  .word     SPI2_IRQHandler
+  .word     UART3_IRQHandler
+  .word     UART4_IRQHandler
+  .word     TIMER5_IRQHandler
+  .word     TIMER6_IRQHandler
+  .word     DMA1_Channel0_IRQHandler
+  .word     DMA1_Channel1_IRQHandler
+  .word     DMA1_Channel2_IRQHandler
+  .word     DMA1_Channel3_IRQHandler
+  .word     DMA1_Channel4_IRQHandler
   .word     0
   .word     0
-	.word     CAN1_TX_IRQHandler
-	.word     CAN1_RX0_IRQHandler
-	.word     CAN1_RX1_IRQHandler
-	.word     CAN1_EWMC_IRQHandler
-	.word     USBFS_IRQHandler
+  .word     CAN1_TX_IRQHandler
+  .word     CAN1_RX0_IRQHandler
+  .word     CAN1_RX1_IRQHandler
+  .word     CAN1_EWMC_IRQHandler
+  .word     USBFS_IRQHandler
 
 .global Reset_Handler
 .type Reset_Handler,@function

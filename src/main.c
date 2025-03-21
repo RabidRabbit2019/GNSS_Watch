@@ -7,7 +7,7 @@
 #include "n200_func.h"
 #include "gd32vf103.h"
 #include <flag2x2.h>
-#include <font_24_26.h>
+#include <font_28_32.h>
 
 #include <time.h>
 #include <string.h>
@@ -92,22 +92,22 @@ void calibrate_touchscreen() {
   // с учётов поворота осей и зеркалирования
   display_fill_rectangle_dma( 0, 0, DISPLAY_WIDTH, DISPLAY_HEIGHT, DISPLAY_COLOR_BLACK );
   if ( xpt2046_touched() ) {
-    int v_y = (DISPLAY_HEIGHT - (font_24_26_font.m_row_height * 2)) / 2;
+    int v_y = (DISPLAY_HEIGHT - (font_28_32_font.m_row_height * 2)) / 2;
     diplay_write_string_with_background(
           0, v_y
-        , DISPLAY_WIDTH, font_24_26_font.m_row_height
+        , DISPLAY_WIDTH, font_28_32_font.m_row_height
         , "Для начала калибровки"
-        , &font_24_26_font
+        , &font_28_32_font
         , DISPLAY_COLOR_GREEN
         , DISPLAY_COLOR_BLACK
         , DISPLAY_COLOR_BLACK
         , 0
         );
     diplay_write_string_with_background(
-          0, v_y + font_24_26_font.m_row_height
-        , DISPLAY_WIDTH, font_24_26_font.m_row_height
+          0, v_y + font_28_32_font.m_row_height
+        , DISPLAY_WIDTH, font_28_32_font.m_row_height
         , "отпустите экран."
-        , &font_24_26_font
+        , &font_28_32_font
         , DISPLAY_COLOR_GREEN
         , DISPLAY_COLOR_BLACK
         , DISPLAY_COLOR_BLACK
@@ -117,35 +117,35 @@ void calibrate_touchscreen() {
   }
   display_fill_rectangle_dma( 0, 0, DISPLAY_WIDTH, DISPLAY_HEIGHT, DISPLAY_COLOR_BLACK );
   //
-  int v_y = (DISPLAY_HEIGHT - (font_24_26_font.m_row_height * 3)) / 2;
+  int v_y = (DISPLAY_HEIGHT - (font_28_32_font.m_row_height * 3)) / 2;
   diplay_write_string_with_background(
         0, v_y
-      , DISPLAY_WIDTH, font_24_26_font.m_row_height
-      , "[калибровка]"
-      , &font_24_26_font
+      , DISPLAY_WIDTH, font_28_32_font.m_row_height
+      , "-калибровка-"
+      , &font_28_32_font
       , DISPLAY_COLOR_YELLOW
-      , DISPLAY_COLOR_BLUE
-      , DISPLAY_COLOR_BLUE
+      , DISPLAY_COLOR_DARKBLUE
+      , DISPLAY_COLOR_DARKBLUE
       , 0
       );
   diplay_write_string_with_background(
-        0, v_y + font_24_26_font.m_row_height
-      , DISPLAY_WIDTH, font_24_26_font.m_row_height
+        0, v_y + font_28_32_font.m_row_height
+      , DISPLAY_WIDTH, font_28_32_font.m_row_height
       , "касайтесь экрана"
-      , &font_24_26_font
+      , &font_28_32_font
       , DISPLAY_COLOR_WHITE
-      , DISPLAY_COLOR_GRAY
-      , DISPLAY_COLOR_GRAY
+      , DISPLAY_COLOR_DARKGRAY
+      , DISPLAY_COLOR_DARKGRAY
       , 0
       );
   diplay_write_string_with_background(
-        0, v_y + font_24_26_font.m_row_height * 2
-      , DISPLAY_WIDTH, font_24_26_font.m_row_height
+        0, v_y + font_28_32_font.m_row_height * 2
+      , DISPLAY_WIDTH, font_28_32_font.m_row_height
       , "там, где крестик"
-      , &font_24_26_font
+      , &font_28_32_font
       , DISPLAY_COLOR_WHITE
-      , DISPLAY_COLOR_GRAY
-      , DISPLAY_COLOR_GRAY
+      , DISPLAY_COLOR_DARKGRAY
+      , DISPLAY_COLOR_DARKGRAY
       , 0
       );
   //

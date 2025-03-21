@@ -292,7 +292,7 @@ void display_draw_zic_image( int x, int y, int w, int h, const uint8_t * a_data,
   zic_decompress_init( a_data, a_data_len, v_image_line1, w, h, &v_st );
 
   display_select();
-  display_set_addr_window_dma((uint16_t)x, (uint16_t)y, (uint16_t)(x+w), (uint16_t)(y+h));
+  display_set_addr_window_dma((uint16_t)x, (uint16_t)y, (uint16_t)w, (uint16_t)h);
 
   if ( h > 0 ) {
     if ( zic_decompress_row( &v_st ) ) {
