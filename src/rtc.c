@@ -148,7 +148,7 @@ uint32_t rtc_get_cnt( uint32_t a_def_value ) {
   // читаем младшие 16 битов, потом старшие
   uint32_t v_low = RTC_CNTL & RTC_LOW_BITS_MASK;
   uint32_t v_high = RTC_CNTH & RTC_LOW_BITS_MASK;
-  // если за время чтания старшей половины успела обновиться младшая
+  // если за время чтения старшей половины успела обновиться младшая
   if ( v_low != (RTC_CNTL & RTC_LOW_BITS_MASK) ) {
     // тогда перечитываем обе половины снова
     v_low = RTC_CNTL & RTC_LOW_BITS_MASK;

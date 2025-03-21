@@ -40,9 +40,9 @@ void main() {
                    ;
   // RGB-светодиод выключаем
   // 1 на PC13 (красный выключен)
-  GPIO_BOP(GPIOC) |= GPIO_BOP_BOP13;
+  GPIO_BOP(GPIOC) = GPIO_BOP_BOP13;
   // 1 на PA1, PA2 (зелёный и синий выключены)
-  GPIO_BOP(GPIOA) |= (GPIO_BOP_BOP1 | GPIO_BOP_BOP2);
+  GPIO_BOP(GPIOA) = (GPIO_BOP_BOP1 | GPIO_BOP_BOP2);
   
   // переносим функции I2C0 (PB9 - SDA, PB8 - SCL)
   AFIO_PCF0 |= AFIO_PCF0_I2C0_REMAP;
@@ -66,7 +66,7 @@ void main() {
   //display_draw_jpeg_image( 0, 0, flag2x2_jpg, flag2x2_jpg_len );
   //delay_ms( 5000 );
   // clear display with black
-  display_fill_rectangle_dma( 0, 0, DISPLAY_WIDTH, DISPLAY_HEIGHT, DISPLAY_COLOR_BLACK );
+  //display_fill_rectangle_dma( 0, 0, DISPLAY_WIDTH, DISPLAY_HEIGHT, DISPLAY_COLOR_BLACK );
   //
   uint32_t v_ts = g_milliseconds;
   // loop

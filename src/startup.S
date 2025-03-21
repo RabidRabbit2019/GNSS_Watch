@@ -159,31 +159,28 @@ exception_table:
 	.word     CAN1_EWMC_IRQHandler
 	.word     USBFS_IRQHandler
 
-
 .global Reset_Handler
 .type Reset_Handler,@function
 Reset_Handler:
   // Disable interrupts until they are needed.
   csrc CSR_MSTATUS, MSTATUS_MIE
   // Move from 0x00000000 to 0x08000000 address space if necessary.
-  lui  a0, %hi(in_address_space)
-  jr   %lo(in_address_space)(a0)
-//  la   a0, in_address_space
-//  li   a1, 1
-//  slli a1, a1, 27
-//  bleu a1, a0, in_address_space
-//  add  a0, a0, a1
-//  jr   a0
+  la   a0, in_address_space
+  li   a1, 1
+  slli a1, a1, 27
+  bleu a1, a0, in_address_space
+  add  a0, a0, a1
+  jr   a0
 in_address_space:
   // Load the initial stack pointer value.
-  la   sp, _estack
+  la sp, _estack
   // Set the vector table's base address.
-  la   a0, exception_table
+  la a0, exception_table
   csrw CSR_MTVT, a0
   // Set non-vectored interrupts to use the default handler.
   // (That will gracefully crash the program,
   //  so only use vectored interrupts for now.)
-  la   a0, loop_int_handler
+  la a0, loop_int_handler
   csrw CSR_MTVEC, a0
   //
   call startup_code

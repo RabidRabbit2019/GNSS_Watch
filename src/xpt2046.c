@@ -91,8 +91,8 @@ void xpt2046_init() {
                    | GPIO_MODE_SET1(XPT2046_PIN_MISO, 0x0F & (GPIO_MODE_AF_PP | GPIO_OSPEED_10MHZ))
                    | GPIO_MODE_SET1(XPT2046_PIN_MOSI, 0x0F & (GPIO_MODE_AF_PP | GPIO_OSPEED_10MHZ))
                    | GPIO_MODE_SET1(XPT2046_PIN_SCK, 0x0F & (GPIO_MODE_AF_PP | GPIO_OSPEED_10MHZ))
-                   | GPIO_MODE_SET1(XPT2046_PIN_CS, 0x0F & GPIO_MODE_OUT_PP)
-                   | GPIO_MODE_SET1(XPT2046_PIN_INT, 0x0F & GPIO_MODE_IPU)
+                   | GPIO_MODE_SET1(XPT2046_PIN_CS, 0x0F & (GPIO_MODE_OUT_PP | GPIO_OSPEED_10MHZ))
+                   | GPIO_MODE_SET1(XPT2046_PIN_INT, 0x0F & GPIO_MODE_IN_FLOATING)
                    ;
   // выбор XPT2046 на шине, выход, в лог. 1 (не выбран)
   GPIO_BOP(GPIOB) = GPIO_BOP_SET(XPT2046_PIN_CS);
