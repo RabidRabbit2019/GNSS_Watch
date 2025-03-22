@@ -86,27 +86,39 @@ void main() {
 }
 
 
-// калибровка тачскрина с записью полученных коэффициентов в последнюю страницу EEPROM
-// так что загрузчик в EEPROM должен быть размером не более 8192 - 128 байтов :)
+// калибровка тачскрина с записью полученных коэффициентов в последнюю страницу флэша
+// так что доступный размер флэша для программы на 1 страницу меньше :)
 void calibrate_touchscreen() {
-  // сначала попробуем прочитать, может коэффициенты уже есть в сохранённом виде
   touch_coeff_s v_coeff;
+  // если есть нажатие на экран или не удалось прочитать коэфиициенты из флэша
   if ( xpt2046_touched() || !load_coeff( &v_coeff ) ) {
     display_fill_rectangle_dma( 0, 0, DISPLAY_WIDTH, DISPLAY_HEIGHT, DISPLAY_COLOR_BLACK );
     if ( xpt2046_touched() ) {
-      int v_y = (DISPLAY_HEIGHT - (font_28_32_font.m_row_height * 2)) / 2;
+      int v_y = (DISPLAY_HEIGHT - (font_28_32_font.m_row_height * 3)) / 2;
       diplay_write_string_with_background(
             0, v_y
           , DISPLAY_WIDTH, font_28_32_font.m_row_height
-          , "для начала калибровки"
+          , "для начала"
           , &font_28_32_font
           , DISPLAY_COLOR_GREEN
           , DISPLAY_COLOR_BLACK
           , DISPLAY_COLOR_BLACK
           , 0
           );
+      v_y += font_28_32_font.m_row_height;
       diplay_write_string_with_background(
-            0, v_y + font_28_32_font.m_row_height
+            0, v_y
+          , DISPLAY_WIDTH, font_28_32_font.m_row_height
+          , "калибровки"
+          , &font_28_32_font
+          , DISPLAY_COLOR_GREEN
+          , DISPLAY_COLOR_BLACK
+          , DISPLAY_COLOR_BLACK
+          , 0
+          );
+      v_y += font_28_32_font.m_row_height;
+      diplay_write_string_with_background(
+            0, v_y
           , DISPLAY_WIDTH, font_28_32_font.m_row_height
           , "отпустите экран"
           , &font_28_32_font
@@ -122,8 +134,7 @@ void calibrate_touchscreen() {
     // калибровка
     // идея подсмотрена в https://embedded.icu/article/mikrokontrollery/rabota-s-rezistivnym-sensornym-ekranom
     // после калибровки координаты касаний будут соответствовать координатам в системе координат экрана
-    // с учётов поворота осей и зеркалирования
-    //
+    // с учётом поворота осей и зеркалирования
     int v_y = (DISPLAY_HEIGHT - (font_28_32_font.m_row_height * 3)) / 2;
     diplay_write_string_with_background(
           0, v_y
