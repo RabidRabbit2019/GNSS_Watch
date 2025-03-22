@@ -91,18 +91,14 @@ void main() {
 void calibrate_touchscreen() {
   // сначала попробуем прочитать, может коэффициенты уже есть в сохранённом виде
   touch_coeff_s v_coeff;
-  if ( !load_coeff( &v_coeff ) ) {
-    // калибровка
-    // идея подсмотрена в https://embedded.icu/article/mikrokontrollery/rabota-s-rezistivnym-sensornym-ekranom
-    // после калибровки координаты касаний будут соответствовать координатам в системе координат экрана
-    // с учётов поворота осей и зеркалирования
+  if ( xpt2046_touched() || !load_coeff( &v_coeff ) ) {
     display_fill_rectangle_dma( 0, 0, DISPLAY_WIDTH, DISPLAY_HEIGHT, DISPLAY_COLOR_BLACK );
     if ( xpt2046_touched() ) {
       int v_y = (DISPLAY_HEIGHT - (font_28_32_font.m_row_height * 2)) / 2;
       diplay_write_string_with_background(
             0, v_y
           , DISPLAY_WIDTH, font_28_32_font.m_row_height
-          , "Для начала калибровки"
+          , "для начала калибровки"
           , &font_28_32_font
           , DISPLAY_COLOR_GREEN
           , DISPLAY_COLOR_BLACK
@@ -112,7 +108,7 @@ void calibrate_touchscreen() {
       diplay_write_string_with_background(
             0, v_y + font_28_32_font.m_row_height
           , DISPLAY_WIDTH, font_28_32_font.m_row_height
-          , "отпустите экран."
+          , "отпустите экран"
           , &font_28_32_font
           , DISPLAY_COLOR_GREEN
           , DISPLAY_COLOR_BLACK
@@ -120,8 +116,13 @@ void calibrate_touchscreen() {
           , 0
           );
       while( xpt2046_touched() ) {}
+      display_fill_rectangle_dma( 0, 0, DISPLAY_WIDTH, DISPLAY_HEIGHT, DISPLAY_COLOR_BLACK );
+      delay_ms( 250 );
     }
-    display_fill_rectangle_dma( 0, 0, DISPLAY_WIDTH, DISPLAY_HEIGHT, DISPLAY_COLOR_BLACK );
+    // калибровка
+    // идея подсмотрена в https://embedded.icu/article/mikrokontrollery/rabota-s-rezistivnym-sensornym-ekranom
+    // после калибровки координаты касаний будут соответствовать координатам в системе координат экрана
+    // с учётов поворота осей и зеркалирования
     //
     int v_y = (DISPLAY_HEIGHT - (font_28_32_font.m_row_height * 3)) / 2;
     diplay_write_string_with_background(
