@@ -77,20 +77,20 @@ exception_table:
   .word     eclic_msip_handler
   .word     0
   .word     0
-  .word  	  0
-  .word  	  eclic_mtip_handler
-  .word  	  0
-  .word  	  0
-  .word  	  0
-  .word  	  0
-  .word  	  0
-  .word  	  0
-  .word  	  0
-  .word 	  0
-  .word  	  0
-  .word  	  eclic_bwei_handler
-  .word  	  eclic_pmovi_handler
-  .word  	  WWDGT_IRQHandler
+  .word     0
+  .word     eclic_mtip_handler
+  .word     0
+  .word     0
+  .word     0
+  .word     0
+  .word     0
+  .word     0
+  .word     0
+  .word     0
+  .word     0
+  .word     eclic_bwei_handler
+  .word     eclic_pmovi_handler
+  .word     WWDGT_IRQHandler
   .word     LVD_IRQHandler
   .word     TAMPER_IRQHandler
   .word     RTC_IRQHandler

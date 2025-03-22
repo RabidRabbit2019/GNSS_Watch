@@ -4,6 +4,7 @@
 #include "rtc.h"
 #include "bme280.h"
 #include "xpt2046.h"
+#include "settings.h"
 #include "n200_func.h"
 #include "gd32vf103.h"
 #include <flag2x2.h>
@@ -52,6 +53,8 @@ void main() {
                    | GPIO_MODE_SET1(8, 0x0F & (GPIO_MODE_AF_OD | GPIO_OSPEED_2MHZ))
                    | GPIO_MODE_SET1(9, 0x0F & (GPIO_MODE_AF_OD | GPIO_OSPEED_2MHZ))
                    ;
+  // инициализация хранилища настроек
+  settings_init();
   // настройка экрана
   display_init_dma();
   xpt2046_init();
@@ -86,218 +89,206 @@ void main() {
 // калибровка тачскрина с записью полученных коэффициентов в последнюю страницу EEPROM
 // так что загрузчик в EEPROM должен быть размером не более 8192 - 128 байтов :)
 void calibrate_touchscreen() {
-  // калибровка
-  // идея подсмотрена в https://embedded.icu/article/mikrokontrollery/rabota-s-rezistivnym-sensornym-ekranom
-  // после калибровки координаты касаний будут соответствовать координатам в системе координат экрана
-  // с учётов поворота осей и зеркалирования
-  display_fill_rectangle_dma( 0, 0, DISPLAY_WIDTH, DISPLAY_HEIGHT, DISPLAY_COLOR_BLACK );
-  if ( xpt2046_touched() ) {
-    int v_y = (DISPLAY_HEIGHT - (font_28_32_font.m_row_height * 2)) / 2;
+  // сначала попробуем прочитать, может коэффициенты уже есть в сохранённом виде
+  touch_coeff_s v_coeff;
+  if ( !load_coeff( &v_coeff ) ) {
+    // калибровка
+    // идея подсмотрена в https://embedded.icu/article/mikrokontrollery/rabota-s-rezistivnym-sensornym-ekranom
+    // после калибровки координаты касаний будут соответствовать координатам в системе координат экрана
+    // с учётов поворота осей и зеркалирования
+    display_fill_rectangle_dma( 0, 0, DISPLAY_WIDTH, DISPLAY_HEIGHT, DISPLAY_COLOR_BLACK );
+    if ( xpt2046_touched() ) {
+      int v_y = (DISPLAY_HEIGHT - (font_28_32_font.m_row_height * 2)) / 2;
+      diplay_write_string_with_background(
+            0, v_y
+          , DISPLAY_WIDTH, font_28_32_font.m_row_height
+          , "Для начала калибровки"
+          , &font_28_32_font
+          , DISPLAY_COLOR_GREEN
+          , DISPLAY_COLOR_BLACK
+          , DISPLAY_COLOR_BLACK
+          , 0
+          );
+      diplay_write_string_with_background(
+            0, v_y + font_28_32_font.m_row_height
+          , DISPLAY_WIDTH, font_28_32_font.m_row_height
+          , "отпустите экран."
+          , &font_28_32_font
+          , DISPLAY_COLOR_GREEN
+          , DISPLAY_COLOR_BLACK
+          , DISPLAY_COLOR_BLACK
+          , 0
+          );
+      while( xpt2046_touched() ) {}
+    }
+    display_fill_rectangle_dma( 0, 0, DISPLAY_WIDTH, DISPLAY_HEIGHT, DISPLAY_COLOR_BLACK );
+    //
+    int v_y = (DISPLAY_HEIGHT - (font_28_32_font.m_row_height * 3)) / 2;
     diplay_write_string_with_background(
           0, v_y
         , DISPLAY_WIDTH, font_28_32_font.m_row_height
-        , "Для начала калибровки"
+        , "-калибровка-"
         , &font_28_32_font
-        , DISPLAY_COLOR_GREEN
-        , DISPLAY_COLOR_BLACK
-        , DISPLAY_COLOR_BLACK
+        , DISPLAY_COLOR_YELLOW
+        , DISPLAY_COLOR_DARKBLUE
+        , DISPLAY_COLOR_DARKBLUE
         , 0
         );
     diplay_write_string_with_background(
           0, v_y + font_28_32_font.m_row_height
         , DISPLAY_WIDTH, font_28_32_font.m_row_height
-        , "отпустите экран."
+        , "касайтесь экрана"
         , &font_28_32_font
-        , DISPLAY_COLOR_GREEN
-        , DISPLAY_COLOR_BLACK
-        , DISPLAY_COLOR_BLACK
+        , DISPLAY_COLOR_WHITE
+        , DISPLAY_COLOR_DARKGRAY
+        , DISPLAY_COLOR_DARKGRAY
         , 0
         );
-    while( xpt2046_touched() ) {}
-  }
-  display_fill_rectangle_dma( 0, 0, DISPLAY_WIDTH, DISPLAY_HEIGHT, DISPLAY_COLOR_BLACK );
-  //
-  int v_y = (DISPLAY_HEIGHT - (font_28_32_font.m_row_height * 3)) / 2;
-  diplay_write_string_with_background(
-        0, v_y
-      , DISPLAY_WIDTH, font_28_32_font.m_row_height
-      , "-калибровка-"
-      , &font_28_32_font
-      , DISPLAY_COLOR_YELLOW
-      , DISPLAY_COLOR_DARKBLUE
-      , DISPLAY_COLOR_DARKBLUE
-      , 0
-      );
-  diplay_write_string_with_background(
-        0, v_y + font_28_32_font.m_row_height
-      , DISPLAY_WIDTH, font_28_32_font.m_row_height
-      , "касайтесь экрана"
-      , &font_28_32_font
-      , DISPLAY_COLOR_WHITE
-      , DISPLAY_COLOR_DARKGRAY
-      , DISPLAY_COLOR_DARKGRAY
-      , 0
-      );
-  diplay_write_string_with_background(
-        0, v_y + font_28_32_font.m_row_height * 2
-      , DISPLAY_WIDTH, font_28_32_font.m_row_height
-      , "там, где крестик"
-      , &font_28_32_font
-      , DISPLAY_COLOR_WHITE
-      , DISPLAY_COLOR_DARKGRAY
-      , DISPLAY_COLOR_DARKGRAY
-      , 0
-      );
-  //
-  int z;
-  int corners[4][2];
-  // левый верхний угол
-  display_fill_rectangle_dma( 8, 0, 1, 17, DISPLAY_COLOR_BLUE );
-  display_fill_rectangle_dma( 0, 8, 17, 1, DISPLAY_COLOR_BLUE );
-  // ждём нажатия
-  for (;;) {
-    while ( !xpt2046_touched() ) {}
-    if ( xpt2046_read( &corners[0][0], &corners[0][1], &z ) ) {
-      break;
-    }
-  }
-  display_fill_rectangle_dma( 0, 0, 17, 17, DISPLAY_COLOR_BLACK );
-  delay_ms( 250 );
-  // правый верхний угол
-  display_fill_rectangle_dma( DISPLAY_WIDTH - 9, 0, 1, 17, DISPLAY_COLOR_BLUE );
-  display_fill_rectangle_dma( DISPLAY_WIDTH - 17, 8, 17, 1, DISPLAY_COLOR_BLUE );
-  // ждём нажатия
-  for (;;) {
-    while ( !xpt2046_touched() ) {}
-    if ( xpt2046_read( &corners[1][0], &corners[1][1], &z ) ) {
-      break;
-    }
-  }
-  display_fill_rectangle_dma( DISPLAY_WIDTH - 17, 0, 17, 17, DISPLAY_COLOR_BLACK );
-  delay_ms( 250 );
-  // левый нижний угол
-  display_fill_rectangle_dma( 8, DISPLAY_HEIGHT - 17, 1, 17, DISPLAY_COLOR_BLUE );
-  display_fill_rectangle_dma( 0, DISPLAY_HEIGHT - 9, 17, 1, DISPLAY_COLOR_BLUE );
-  // ждём нажатия
-  for (;;) {
-    while ( !xpt2046_touched() ) {}
-    if ( xpt2046_read( &corners[2][0], &corners[2][1], &z ) ) {
-      break;
-    }
-  }
-  display_fill_rectangle_dma( 0, DISPLAY_HEIGHT - 17, 17, 17, DISPLAY_COLOR_BLACK );
-  delay_ms( 250 );
-  // правый нижний угол
-  display_fill_rectangle_dma( DISPLAY_WIDTH - 9, DISPLAY_HEIGHT - 17, 1, 17, DISPLAY_COLOR_BLUE );
-  display_fill_rectangle_dma( DISPLAY_WIDTH - 17, DISPLAY_HEIGHT - 9, 17, 1, DISPLAY_COLOR_BLUE );
-  // ждём нажатия
-  for (;;) {
-    while ( !xpt2046_touched() ) {}
-    if ( xpt2046_read( &corners[3][0], &corners[3][1], &z ) ) {
-      break;
-    }
-  }
-  display_fill_rectangle_dma( DISPLAY_WIDTH - 17, DISPLAY_HEIGHT - 17, 17, 17, DISPLAY_COLOR_BLACK );
-  delay_ms( 250 );
-  // определяем коэффициенты
-  int Ax = 0, Bx = 0, Dx = 0, Ay = 0, By = 0, Dy = 0;
-  /*
-  for ( int i = 0; i < 4; ++i ) {
-    printf( "[%d] x = %d, y = %d\n", i, corners[i][0], corners[i][1] );
-  }
-  */
-  // определяем совпадение осей координат
-  // смотрим на разницу по Y двух точек с одинаковыми координатами по Y в экранной системе координат
-  int dd = corners[1][1] - corners[0][1];
-  if ( dd < 0 ) {
-    dd = 0 - dd;
-  }
-  // printf( "dd = %d\n" );
-  do {
-    // число 1024 подходит для 12-битных отсчётов от контроллера сенсорной поверхности
-    if ( dd < 1024 ) {
-      // коэффициенты Ay = 0 и Bx = 0, т.е. оси экрана (X, Y) совпадают с осями сенсорной поверхности
-      // различия замеров по координатам
-      int dx1 = corners[1][0] - corners[0][0];
-      int dx2 = corners[3][0] - corners[2][0];
-      int dy1 = corners[2][1] - corners[0][1];
-      int dy2 = corners[3][1] - corners[1][1];
-      if ( 0 == dx1 || 0 == dx2 || 0 == dy1 || 0 == dy2 ) {
-        // printf( "Calibration error\n" );
+    diplay_write_string_with_background(
+          0, v_y + font_28_32_font.m_row_height * 2
+        , DISPLAY_WIDTH, font_28_32_font.m_row_height
+        , "там, где крестик"
+        , &font_28_32_font
+        , DISPLAY_COLOR_WHITE
+        , DISPLAY_COLOR_DARKGRAY
+        , DISPLAY_COLOR_DARKGRAY
+        , 0
+        );
+    //
+    int z;
+    int corners[4][2];
+    // левый верхний угол
+    display_fill_rectangle_dma( 8, 0, 1, 17, DISPLAY_COLOR_BLUE );
+    display_fill_rectangle_dma( 0, 8, 17, 1, DISPLAY_COLOR_BLUE );
+    // ждём нажатия
+    for (;;) {
+      while ( !xpt2046_touched() ) {}
+      if ( xpt2046_read( &corners[0][0], &corners[0][1], &z ) ) {
         break;
       }
-      // расчитываем коэффициенты
-      Ax = ( ((4096 * (DISPLAY_WIDTH - 8 - 8)) / dx1) + ((4096 * (DISPLAY_WIDTH - 8 - 8)) / dx2) ) / 2;
-      Dx = ((4096 * 8) - (corners[0][0] * Ax))
-         + ((4096 * (DISPLAY_WIDTH - 8)) - (corners[1][0] * Ax))
-         + ((4096 * 8) - (corners[2][0] * Ax))
-         + ((4096 * (DISPLAY_WIDTH - 8)) - (corners[3][0] * Ax))
-         ;
-      Dx /= 4;
-      // printf( "Ax = %d, Dx = %d\n", Ax, Dx );
-      By = ( ((4096 * (DISPLAY_HEIGHT - 8 - 8)) / dy1) + ((4096 * (DISPLAY_HEIGHT - 8 - 8)) / dy2) ) / 2;
-      Dy = ((4096 * 8) - (corners[0][1] * By))
-         + ((4096 * (DISPLAY_HEIGHT - 8)) - (corners[2][1] * By))
-         + ((4096 * 8) - (corners[1][1] * By))
-         + ((4096 * (DISPLAY_HEIGHT - 8)) - (corners[3][1] * By))
-         ;
-      Dy /= 4;
-      // printf( "By = %d, Dy = %d\n", By, Dy );
-    } else {
-      // коэффициенты Ax = 0 и By = 0, т.е. оси экрана (X, Y) не совпадают с осями сенсорной поверхности
-      // (X экрана соответствует Y сенсорной поверхности, Y экрана - X сенсорной поверхности)
-      // различия замеров по координатам
-      int dx1 = corners[1][1] - corners[0][1];
-      int dx2 = corners[3][1] - corners[2][1];
-      int dy1 = corners[2][0] - corners[0][0];
-      int dy2 = corners[3][0] - corners[1][0];
-      if ( 0 == dx1 || 0 == dx2 || 0 == dy1 || 0 == dy2 ) {
-        // printf( "Calibration error\n" );
+    }
+    display_fill_rectangle_dma( 0, 0, 17, 17, DISPLAY_COLOR_BLACK );
+    //ждём отпускания экрана
+    while ( xpt2046_touched() ) {}
+    delay_ms( 250 );
+    // правый верхний угол
+    display_fill_rectangle_dma( DISPLAY_WIDTH - 9, 0, 1, 17, DISPLAY_COLOR_BLUE );
+    display_fill_rectangle_dma( DISPLAY_WIDTH - 17, 8, 17, 1, DISPLAY_COLOR_BLUE );
+    // ждём нажатия
+    for (;;) {
+      while ( !xpt2046_touched() ) {}
+      if ( xpt2046_read( &corners[1][0], &corners[1][1], &z ) ) {
         break;
       }
-      // расчитываем коэффициенты
-      Bx = ( ((4096 * (DISPLAY_WIDTH - 8 - 8)) / dx1) + ((4096 * (DISPLAY_WIDTH - 8 - 8)) / dx2) ) / 2;
-      Dx = ((4096 * 8) - (corners[0][0] * Bx))
-         + ((4096 * (DISPLAY_WIDTH - 8)) - (corners[1][0] * Bx))
-         + ((4096 * 8) - (corners[2][0] * Bx))
-         + ((4096 * (DISPLAY_WIDTH - 8)) - (corners[3][0] * Bx))
-         ;
-      Dx /= 4;
-      // printf( "Bx = %d, Dx = %d\n", Bx, Dx );
-      Ay = ( ((4096 * (DISPLAY_HEIGHT - 8 - 8)) / dy1) + ((4096 * (DISPLAY_HEIGHT - 8 - 8)) / dy2) ) / 2;
-      Dy = ((4096 * 8) - (corners[0][1] * Ay))
-         + ((4096 * (DISPLAY_HEIGHT - 8)) - (corners[2][1] * Ay))
-         + ((4096 * 8) - (corners[1][1] * Ay))
-         + ((4096 * (DISPLAY_HEIGHT - 8)) - (corners[3][1] * Ay))
-         ;
-      Dy /= 4;
-      // printf( "Ay = %d, Dy = %d\n", Ay, Dy );
     }
-  } while (false);
+    display_fill_rectangle_dma( DISPLAY_WIDTH - 17, 0, 17, 17, DISPLAY_COLOR_BLACK );
+    //ждём отпускания экрана
+    while ( xpt2046_touched() ) {}
+    delay_ms( 250 );
+    // левый нижний угол
+    display_fill_rectangle_dma( 8, DISPLAY_HEIGHT - 17, 1, 17, DISPLAY_COLOR_BLUE );
+    display_fill_rectangle_dma( 0, DISPLAY_HEIGHT - 9, 17, 1, DISPLAY_COLOR_BLUE );
+    // ждём нажатия
+    for (;;) {
+      while ( !xpt2046_touched() ) {}
+      if ( xpt2046_read( &corners[2][0], &corners[2][1], &z ) ) {
+        break;
+      }
+    }
+    display_fill_rectangle_dma( 0, DISPLAY_HEIGHT - 17, 17, 17, DISPLAY_COLOR_BLACK );
+    //ждём отпускания экрана
+    while ( xpt2046_touched() ) {}
+    delay_ms( 250 );
+    // правый нижний угол
+    display_fill_rectangle_dma( DISPLAY_WIDTH - 9, DISPLAY_HEIGHT - 17, 1, 17, DISPLAY_COLOR_BLUE );
+    display_fill_rectangle_dma( DISPLAY_WIDTH - 17, DISPLAY_HEIGHT - 9, 17, 1, DISPLAY_COLOR_BLUE );
+    // ждём нажатия
+    for (;;) {
+      while ( !xpt2046_touched() ) {}
+      if ( xpt2046_read( &corners[3][0], &corners[3][1], &z ) ) {
+        break;
+      }
+    }
+    display_fill_rectangle_dma( DISPLAY_WIDTH - 17, DISPLAY_HEIGHT - 17, 17, 17, DISPLAY_COLOR_BLACK );
+    //ждём отпускания экрана
+    while ( xpt2046_touched() ) {}
+    delay_ms( 250 );
+    // определяем коэффициенты
+    int Ax = 0, Bx = 0, Dx = 0, Ay = 0, By = 0, Dy = 0;
+    // определяем совпадение осей координат
+    // смотрим на разницу по Y двух точек с одинаковыми координатами по Y в экранной системе координат
+    int dd = corners[1][1] - corners[0][1];
+    if ( dd < 0 ) {
+      dd = 0 - dd;
+    }
+    //
+    do {
+      // число 1024 подходит для 12-битных отсчётов от контроллера сенсорной поверхности
+      if ( dd < 1024 ) {
+        // коэффициенты Ay = 0 и Bx = 0, т.е. оси экрана (X, Y) совпадают с осями сенсорной поверхности
+        // различия замеров по координатам
+        int dx1 = corners[1][0] - corners[0][0];
+        int dx2 = corners[3][0] - corners[2][0];
+        int dy1 = corners[2][1] - corners[0][1];
+        int dy2 = corners[3][1] - corners[1][1];
+        if ( 0 == dx1 || 0 == dx2 || 0 == dy1 || 0 == dy2 ) {
+          break;
+        }
+        // расчитываем коэффициенты
+        Ax = ( ((4096 * (DISPLAY_WIDTH - 8 - 8)) / dx1) + ((4096 * (DISPLAY_WIDTH - 8 - 8)) / dx2) ) / 2;
+        Dx = ((4096 * 8) - (corners[0][0] * Ax))
+           + ((4096 * (DISPLAY_WIDTH - 8)) - (corners[1][0] * Ax))
+           + ((4096 * 8) - (corners[2][0] * Ax))
+           + ((4096 * (DISPLAY_WIDTH - 8)) - (corners[3][0] * Ax))
+           ;
+        Dx /= 4;
+        By = ( ((4096 * (DISPLAY_HEIGHT - 8 - 8)) / dy1) + ((4096 * (DISPLAY_HEIGHT - 8 - 8)) / dy2) ) / 2;
+        Dy = ((4096 * 8) - (corners[0][1] * By))
+           + ((4096 * (DISPLAY_HEIGHT - 8)) - (corners[2][1] * By))
+           + ((4096 * 8) - (corners[1][1] * By))
+           + ((4096 * (DISPLAY_HEIGHT - 8)) - (corners[3][1] * By))
+           ;
+        Dy /= 4;
+      } else {
+        // коэффициенты Ax = 0 и By = 0, т.е. оси экрана (X, Y) не совпадают с осями сенсорной поверхности
+        // (X экрана соответствует Y сенсорной поверхности, Y экрана - X сенсорной поверхности)
+        // различия замеров по координатам
+        int dx1 = corners[1][1] - corners[0][1];
+        int dx2 = corners[3][1] - corners[2][1];
+        int dy1 = corners[2][0] - corners[0][0];
+        int dy2 = corners[3][0] - corners[1][0];
+        if ( 0 == dx1 || 0 == dx2 || 0 == dy1 || 0 == dy2 ) {
+          break;
+        }
+        // расчитываем коэффициенты
+        Bx = ( ((4096 * (DISPLAY_WIDTH - 8 - 8)) / dx1) + ((4096 * (DISPLAY_WIDTH - 8 - 8)) / dx2) ) / 2;
+        Dx = ((4096 * 8) - (corners[0][0] * Bx))
+           + ((4096 * (DISPLAY_WIDTH - 8)) - (corners[1][0] * Bx))
+           + ((4096 * 8) - (corners[2][0] * Bx))
+           + ((4096 * (DISPLAY_WIDTH - 8)) - (corners[3][0] * Bx))
+           ;
+        Dx /= 4;
+        // printf( "Bx = %d, Dx = %d\n", Bx, Dx );
+        Ay = ( ((4096 * (DISPLAY_HEIGHT - 8 - 8)) / dy1) + ((4096 * (DISPLAY_HEIGHT - 8 - 8)) / dy2) ) / 2;
+        Dy = ((4096 * 8) - (corners[0][1] * Ay))
+           + ((4096 * (DISPLAY_HEIGHT - 8)) - (corners[2][1] * Ay))
+           + ((4096 * 8) - (corners[1][1] * Ay))
+           + ((4096 * (DISPLAY_HEIGHT - 8)) - (corners[3][1] * Ay))
+           ;
+        Dy /= 4;
+      }
+    } while (false);
+    // записываем коэффициенты
+    v_coeff.Ax = Ax;
+    v_coeff.Bx = Bx;
+    v_coeff.Dx = Dx;
+    v_coeff.Ay = Ay;
+    v_coeff.By = By;
+    v_coeff.Dy = Dy;
+    store_coeff( &v_coeff );
+  }
   // устанавливаем коэффициенты
-  xpt2046_set_coeff( Ax, Bx, Dx, Ay, By, Dy );
-  /*
-  // заносим коэффициенты в EEPROM
-  touch_coeff_eeprom_page v_eepg;
-  v_eepg.coeff.Ax = Ax;
-  v_eepg.coeff.Bx = Bx;
-  v_eepg.coeff.Dx = Dx;
-  v_eepg.coeff.Ay = Ay;
-  v_eepg.coeff.By = By;
-  v_eepg.coeff.Dy = Dy;
-  // считаем CRC
-  v_eepg.coeff.crc32 = mik32_crc( (const uint8_t *)&v_eepg.coeff, sizeof(v_eepg.coeff) - sizeof(uint32_t) );
-  // заносим в последнюю страницу EEPROM
-  // стирание страницы
-  if ( eeprom_page_erase( EEPROM_LAST_PAGE_OFFSET ) ) {
-    // объект в стеке размещается с выравниванием на 4 байта
-    if ( !eeprom_page_program( EEPROM_LAST_PAGE_ADDR, (uint32_t *)&v_eepg ) ) {
-      printf( "EEPROM page program error.\n" );
-    }
-  } else {
-    printf( "EEPROM page erase error.\n" );
-  }
-  */
+  xpt2046_set_coeff( v_coeff.Ax, v_coeff.Bx, v_coeff.Dx, v_coeff.Ay, v_coeff.By, v_coeff.Dy );
   //
   display_fill_rectangle_dma( 0, 0, DISPLAY_WIDTH, DISPLAY_HEIGHT, DISPLAY_COLOR_BLACK );
 }

@@ -22,6 +22,7 @@ a.elf: libbaremetal/lib/libc.a libbaremetal/lib/libm.a
           rtc.c \
           bme280.c \
           xpt2046.c \
+          settings.c \
           main.c \
           -Os -g -march=rv32imac_zicsr -mabi=ilp32 -ffunction-sections -fdata-sections \
           -fstrict-volatile-bitfields -fno-strict-aliasing -fno-common -fno-builtin-printf \
